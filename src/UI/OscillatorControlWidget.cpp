@@ -25,7 +25,7 @@ OscillatorControlWidget::OscillatorControlWidget(Oscillator* oscillator, QWidget
     QHBoxLayout* frequencyControls = new QHBoxLayout;
     layout->addLayout(frequencyControls);
 
-    // --- Octave Slider + Label ---
+    // --- Octave Dial + Label ---
     QVBoxLayout* octaveLayout = new QVBoxLayout;
     QLabel* octaveLabel = new QLabel(QString("Octave: %1").arg(oscillator->octave));
     QDial* octaveDial = new QDial();
@@ -43,7 +43,7 @@ OscillatorControlWidget::OscillatorControlWidget(Oscillator* oscillator, QWidget
         octaveLabel->setText(QString("Octave: %1").arg(value));
     });
 
-    // --- Detune Slider + Label ---
+    // --- Detune Dial + Label ---
     QVBoxLayout* detuneLayout = new QVBoxLayout;
     QLabel* detuneLabel = new QLabel(QString("Detune: %1 c").arg(oscillator->detune));
     QDial* detuneDial = new QDial();

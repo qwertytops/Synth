@@ -7,6 +7,7 @@
 #include "CoreAudioWaveMaker.hpp"
 #include "Oscillator.hpp"
 #include "ADSR.hpp"
+#include "LPF.hpp"
 #include "Note.hpp"
 
 using namespace std;
@@ -18,6 +19,7 @@ public:
 
     vector<Oscillator*> oscillators;
     vector<ADSR*> envelopes;
+    vector<LPF*> filters;
 
     bool keys[18];
     vector<Note> notesBeingPlayed;
@@ -26,7 +28,7 @@ public:
     double MakeSound(double elapsed);
     void ProcessInput(int octave);
 
-    Synth(vector<Oscillator*> oscs, vector<ADSR*> envs, int octave);
+    Synth(vector<Oscillator*> oscs, vector<ADSR*> envs, vector<LPF*> filters, int octave);
 
 private:
     CoreAudioWaveMaker<float> player;

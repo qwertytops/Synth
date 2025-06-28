@@ -6,7 +6,6 @@ ADSRControlWidget::ADSRControlWidget(ADSR* adsr, QWidget* parent)
     QHBoxLayout* layout = new QHBoxLayout;
     
     // Attack
-    // Attack
     QVBoxLayout* attackLayout = new QVBoxLayout;
     QSlider* attackSlider = new QSlider(Qt::Vertical);
     QLabel* attackLabel = new QLabel(QString("%1 ms").arg(adsr->attack * 1000));

@@ -18,6 +18,7 @@
 #include "UI/OscillatorControlWidget.hpp"
 #include "UI/SynthControlWidget.hpp"
 #include "UI/ADSRControlWidget.hpp"
+#include "UI/LPFControlWidget.hpp"
 
 #include "CoreAudioWaveMaker.hpp"
 #include "Synth.hpp"
@@ -32,9 +33,12 @@ CGKeyCode keyCodes[18] = {
 
 Oscillator o1(WaveType::SINE, 4);
 Oscillator o2(WaveType::SINE, 3);
-// Oscillator o3(WaveType::SINE, 2);
+
 ADSR env1(0.01, 0.01, 1.0, 0.01);
-Synth synth({&o1, &o2}, {&env1}, 0);
+
+LPF lpf1(15000);
+
+Synth synth({&o1, &o2}, {&env1}, {&lpf1}, 0);
 
 bool isKeyPressed(CGKeyCode keycode) {
     return CGEventSourceKeyState(kCGEventSourceStateHIDSystemState, keycode);
@@ -88,7 +92,7 @@ int main(int argc, char* argv[]) {
 
     layout->addLayout(oscillatorPanels);
 
-    for (size_t i = 0; i < synth.oscillators.size(); ++i) {
+    for (size_t i = 0; i < synth.oscillators.size(); i++) {
         Oscillator* osc = synth.oscillators[i];
 
         OscillatorControlWidget* oscControls = new OscillatorControlWidget(osc);
@@ -96,7 +100,7 @@ int main(int argc, char* argv[]) {
         oscillatorPanels->addWidget(oscControls);
     }
 
-    for (size_t i = 0; i < synth.envelopes.size(); ++i) {
+    for (size_t i = 0; i < synth.envelopes.size(); i++) {
         ADSR* adsr = synth.envelopes[i];
 
         ADSRControlWidget* adsrControls = new ADSRControlWidget(adsr);
@@ -104,6 +108,13 @@ int main(int argc, char* argv[]) {
         layout->addWidget(adsrControls);
     }
 
+    for (size_t i = 0; i < synth.filters.size(); i++) {
+        LPF* lpf = synth.filters[i];
+
+        LPFControlWidget* lpfControls = new LPFControlWidget(lpf);
+
+        layout->addWidget(lpfControls);
+    }
 
     QPushButton* quitButton = new QPushButton("Quit");
 

@@ -25,14 +25,18 @@ double Synth::MakeSound(double elapsed) {
         }
         result += noteRes;
     }
+    for (auto& filter : filters) {
+        result = filter->run(result);
+    }
     notesBeingPlayed = std::move(notesToKeep);
     mtx.unlock();
     return result * volume;
 }
 
-Synth::Synth(std::vector<Oscillator*> oscs, std::vector<ADSR*> envs, int octave)
+Synth::Synth(std::vector<Oscillator*> oscs, std::vector<ADSR*> envs, vector<LPF*> filters, int octave)
     : oscillators(oscs),
       envelopes(envs),
+      filters(filters),
       player([this](double elapsed) { return this->MakeSound(elapsed); })
 {
     player.Start();
