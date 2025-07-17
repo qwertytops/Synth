@@ -36,9 +36,9 @@ Oscillator o2(WaveType::SINE, 3);
 
 ADSR env1(0.01, 0.01, 1.0, 0.01);
 
-LPF lpf1(15000);
+// LPF lpf1(15000);
 
-Synth synth({&o1, &o2}, {&env1}, {&lpf1}, 0);
+Synth synth({&o1, &o2}, {&env1}, {}, 0);
 
 bool isKeyPressed(CGKeyCode keycode) {
     return CGEventSourceKeyState(kCGEventSourceStateHIDSystemState, keycode);
@@ -108,13 +108,13 @@ int main(int argc, char* argv[]) {
         layout->addWidget(adsrControls);
     }
 
-    for (size_t i = 0; i < synth.filters.size(); i++) {
-        LPF* lpf = synth.filters[i];
+    // for (size_t i = 0; i < synth.filters.size(); i++) {
+    //     LPF* lpf = synth.filters[i];
 
-        LPFControlWidget* lpfControls = new LPFControlWidget(lpf);
+    //     LPFControlWidget* lpfControls = new LPFControlWidget(lpf);
 
-        layout->addWidget(lpfControls);
-    }
+    //     layout->addWidget(lpfControls);
+    // }
 
     QPushButton* quitButton = new QPushButton("Quit");
 

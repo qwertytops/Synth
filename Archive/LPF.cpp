@@ -6,6 +6,7 @@ double LPF::run(double input) {
         init = true;
     }
     double out = previous + alpha * (input - previous);
+
     previous = out;
     return out;
 }
