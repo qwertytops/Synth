@@ -1,35 +1,33 @@
 #pragma once
 
 #include <cmath>
+#include <limits>
+
+#include "FilterMode.hpp"
 
 using namespace std;
 
 class BiquadFilter {
 public:
-    enum Mode {
-        LOWPASS,
-        HIGHPASS,
-        BANDPASS,
-        NOTCH,
-        PEAK,
-        LOWSHELF,
-        HIGHSHELF
-    };
-
-    BiquadFilter(Mode mode, double sampleRate, double frequency, double Q, double gainDB = 0.0)
-        : mode(mode), sampleRate(sampleRate), frequency(frequency), Q(Q), gainDB(gainDB) {
+    BiquadFilter(FilterMode mode, double frequency, double Q, double gainDB = 0.0)
+        : mode(mode), sampleRate(44100), frequency(frequency), Q(Q), gainDB(gainDB) {
         calculateCoefficients();
     }
 
-    double process(double input);
+    double run(double input);
 
     void setFrequency(double frequency);
     void setQ(double Q);
     void setGain(double gainDB);
-    void setType(Mode mode);
+    void setMode(FilterMode mode);
+
+    double getFrequency();
+    double getQ();
+    double getGain();
+    FilterMode getMode();
 
 private:
-    Mode mode;
+    FilterMode mode;
     double sampleRate;
     double frequency;
     double Q;
