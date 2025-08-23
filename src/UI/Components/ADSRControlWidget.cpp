@@ -1,4 +1,6 @@
-#include "UI/ADSRControlWidget.hpp"
+#include "UI/Components/ADSRControlWidget.hpp"
+#include "Input.hpp"
+#include "Connection.hpp"
 
 ADSRControlWidget::ADSRControlWidget(ADSR* adsr, QWidget* parent)
     : QWidget(parent), adsr(adsr) {
@@ -66,4 +68,6 @@ ADSRControlWidget::ADSRControlWidget(ADSR* adsr, QWidget* parent)
     layout->addLayout(releaseLayout);
 
     setLayout(layout);
+
+    this->setMinimumHeight(150);
 }

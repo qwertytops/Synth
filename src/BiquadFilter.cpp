@@ -1,18 +1,32 @@
 #include "BiquadFilter.hpp"
+#include "Input.hpp"
+#include "Connection.hpp"
 
-#include <iostream>
+// #include <iostream>
 
-double BiquadFilter::run(double input) {
-    double output = b0 * input + b1 * x1 + b2 * x2
-                    - a1 * y1 - a2 * y2;
+void BiquadFilter::run(double elapsed) {
+    for (auto& pair : inputs.at(Inputs::MAIN)->pairs) {
+        Note* note = pair.first;
+        double value = pair.second;
+
+        value = applyFilter(value);
+        for (auto& conn : outgoingConnections) {
+            conn->destination->pairs.push_back(make_pair(note, value));
+        }
+    }
+}
+
+double BiquadFilter::applyFilter(double input) {
+    if (bypass)
+        return input;
+
+    double output = b0 * input + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
 
     // Shift delay buffers
     x2 = x1;
     x1 = input;
     y2 = y1;
     y1 = output;
-
-    cout << output << endl;
 
     return output;
 }
@@ -32,6 +46,10 @@ void BiquadFilter::setGain(double gainDB) {
 void BiquadFilter::setMode(FilterMode mode) {
     this->mode = mode;
     calculateCoefficients();
+}
+
+void BiquadFilter::setBypass(bool bypass) {
+    this->bypass = bypass;
 }
 
 double BiquadFilter::getFrequency() {

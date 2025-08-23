@@ -1,17 +1,20 @@
 #pragma once
 #include <cmath>
+#include <utility>
 
+#include "Component.hpp"
 #include "WaveType.hpp"
 
 using namespace std;
 
-class Oscillator {
+class Oscillator : public SynthComponent {
 public:
+    double level = 0.5;
     WaveType waveType;
     int octave;
     int detune;
 
-    double run(double elapsed, int noteMidi);
+    void run(double elapsed);
 
     Oscillator(WaveType w, int octave);
     Oscillator(WaveType w, int octave, int detune);
@@ -24,5 +27,15 @@ private:
     double Saw2Wave(double elapsed, double frequency);
     double Noise();
 
+    double getSample(double, Note*);
+
     double HZtoAV(double);
+
+    enum Inputs {
+        MAIN,
+        FREQUENCY,
+        AMPLITUDE,
+        PULSE_WIDTH,
+        SYNC,
+    };
 };

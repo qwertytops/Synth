@@ -2,24 +2,28 @@
 
 #include <cmath>
 #include <limits>
+#include <utility>
 
+#include "Component.hpp"
 #include "FilterMode.hpp"
 
 using namespace std;
 
-class BiquadFilter {
+class BiquadFilter : public SynthComponent {
 public:
     BiquadFilter(FilterMode mode, double frequency, double Q, double gainDB = 0.0)
         : mode(mode), sampleRate(44100), frequency(frequency), Q(Q), gainDB(gainDB) {
         calculateCoefficients();
     }
 
-    double run(double input);
+    void run(double elapsed);
+    double applyFilter(double);
 
     void setFrequency(double frequency);
     void setQ(double Q);
     void setGain(double gainDB);
     void setMode(FilterMode mode);
+    void setBypass(bool bypass);
 
     double getFrequency();
     double getQ();
@@ -27,6 +31,8 @@ public:
     FilterMode getMode();
 
 private:
+    bool bypass;
+    
     FilterMode mode;
     double sampleRate;
     double frequency;
@@ -42,4 +48,11 @@ private:
     double y1 = 0, y2 = 0;
 
     void calculateCoefficients();
+
+    enum Inputs {
+        MAIN,
+        FREQUENCY,
+        QUALITY,
+        GAIN,
+    };
 };

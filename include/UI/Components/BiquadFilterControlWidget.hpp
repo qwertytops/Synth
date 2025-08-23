@@ -2,10 +2,12 @@
 
 #include <QWidget>
 #include <QSlider>
-#include <QDial>
 #include <QLabel>
 #include <QBoxLayout>
 #include <QComboBox>
+#include <QPushButton>
+
+#include "CustomUI/DragOnlyDial.hpp"
 
 #include "BiquadFilter.hpp"
 

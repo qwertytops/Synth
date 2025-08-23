@@ -1,10 +1,13 @@
 #include <QApplication>
+#include <QMainWindow>
 #include <QLabel>
 #include <QSlider>
 #include <QWidget>
+#include <QGridLayout>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QPushButton>
+#include <QScrollArea>
 
 #include <ApplicationServices/ApplicationServices.h>
 #include <chrono>
@@ -15,10 +18,12 @@
 #include <unistd.h>
 #include <cstdio>
 
-#include "UI/OscillatorControlWidget.hpp"
-#include "UI/SynthControlWidget.hpp"
-#include "UI/ADSRControlWidget.hpp"
-#include "UI/BiquadFilterControlWidget.hpp"
+#include "UI/EmptySlot.hpp"
+
+#include "UI/Components/OscillatorControlWidget.hpp"
+#include "UI/Components/SynthControlWidget.hpp"
+#include "UI/Components/ADSRControlWidget.hpp"
+#include "UI/Components/BiquadFilterControlWidget.hpp"
 
 #include "CoreAudioWaveMaker.hpp"
 #include "Synth.hpp"
@@ -38,7 +43,7 @@ ADSR env1(0.01, 0.01, 1.0, 0.01);
 
 BiquadFilter filter1(FilterMode::PEAK, 440, 1, 3);
 
-Synth synth({&o1, &o2}, {&env1}, {&filter1}, 0);
+Synth synth({&o1, &o2, &env1, &filter1}, 0);
 
 bool isKeyPressed(CGKeyCode keycode) {
     return CGEventSourceKeyState(kCGEventSourceStateHIDSystemState, keycode);
@@ -76,59 +81,41 @@ int main(int argc, char* argv[]) {
 
     QApplication app(argc, argv);
 
-    QWidget window;
-    window.setWindowTitle("Synth Control");
-    window.setMinimumWidth(250*synth.oscillators.size());
+    QMainWindow window;
+    window.setWindowTitle("SHA-A Archangel");
+    window.showMaximized();
 
-    QVBoxLayout* layout = new QVBoxLayout;
-    QHBoxLayout* oscillatorPanels = new QHBoxLayout;
+    // Scrollable area
+    QScrollArea* scrollArea = new QScrollArea;
+    scrollArea->setWidgetResizable(true);
 
-    QLabel* label = new QLabel("Synth");
+    // Central scrollable content
+    QWidget* centralWidget = new QWidget;
+    QGridLayout* gridLayout = new QGridLayout;
 
-    layout->addWidget(label);
+    const int rows = 10;
+    const int cols = 3;
 
-    SynthControlWidget* synthControls = new SynthControlWidget(&synth);
-    layout->addWidget(synthControls);
+    for (int r = 0; r < rows; ++r) {
+        gridLayout->setRowStretch(r, 1);
+        for (int c = 0; c < cols; ++c) {
+            gridLayout->setColumnStretch(c, 1);
 
-    layout->addLayout(oscillatorPanels);
-
-    for (size_t i = 0; i < synth.oscillators.size(); i++) {
-        Oscillator* osc = synth.oscillators[i];
-
-        OscillatorControlWidget* oscControls = new OscillatorControlWidget(osc);
-
-        oscillatorPanels->addWidget(oscControls);
+            EmptySlot* slot = new EmptySlot;
+            gridLayout->addWidget(slot, r, c);
+        }
     }
 
-    for (size_t i = 0; i < synth.envelopes.size(); i++) {
-        ADSR* adsr = synth.envelopes[i];
+    centralWidget->setLayout(gridLayout);
+    scrollArea->setWidget(centralWidget);
 
-        ADSRControlWidget* adsrControls = new ADSRControlWidget(adsr);
+    // Set scroll area as central widget
+    window.setCentralWidget(scrollArea);
 
-        layout->addWidget(adsrControls);
-    }
-
-    for (size_t i = 0; i < synth.filters.size(); i++) {
-        BiquadFilter* filter = synth.filters[i];
-
-        BiquadFilterControlWidget* filterControls = new BiquadFilterControlWidget(filter);
-
-        layout->addWidget(filterControls);
-    }
-
-    QPushButton* quitButton = new QPushButton("Quit");
-
-    layout->addWidget(quitButton);
-    window.setLayout(layout);
-    
-    QObject::connect(quitButton, &QPushButton::clicked, [&]() {
-        app.quit();
+    QObject::connect(&app, &QApplication::aboutToQuit, [&]() {
+        inputThread.detach();
     });
 
     window.show();
-
-    int result = app.exec();
-
-    inputThread.detach();
-    return result;
+    return app.exec();
 }

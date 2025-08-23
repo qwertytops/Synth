@@ -1,4 +1,6 @@
 #include "ADSR.hpp"
+#include "Input.hpp"
+#include "Connection.hpp"
 
 ADSR::ADSR() {
     attack = 0.01;
@@ -14,9 +16,21 @@ ADSR::ADSR(double a, double d, double s, double r) {
     release = r;
 }
 
-double ADSR::GetAmplitude(double time, Note* note) {
+void ADSR::run(double elapsed) {
+    for (auto& pair : inputs.at(Inputs::MAIN)->pairs) {
+        Note* note = pair.first;
+        double value = pair.second;
+
+        value *= getAmplitude(elapsed, note);
+        for (auto& conn : outgoingConnections) {
+            conn->destination->pairs.push_back(make_pair(note, value));
+        }
+    }
+}
+
+double ADSR::getAmplitude(double elapsed, Note* note) {
     double amplitude = 0;
-    double lifetime = time - note->noteOn;
+    double lifetime = elapsed - note->noteOn;
 
     if (note->active) {
         if (lifetime < attack) { // A
@@ -31,7 +45,7 @@ double ADSR::GetAmplitude(double time, Note* note) {
     }
     else {
         // R
-        double timeSinceRelease = time - note->noteOff;
+        double timeSinceRelease = elapsed - note->noteOff;
         if (release > 0) {
             amplitude = note->offAmplitude * (1.0 - timeSinceRelease / release);
         } else {
@@ -47,14 +61,3 @@ double ADSR::GetAmplitude(double time, Note* note) {
 
     return amplitude;
 }
-
-// void ADSR::NoteOn(double time) {
-//     triggerOn = time;
-//     noteOn = true;
-// }
-
-// void ADSR::NoteOff(double time, ) {
-//     offAmplitude = GetAmplitude(time);
-//     triggerOff = time;
-//     noteOn = false;
-// }

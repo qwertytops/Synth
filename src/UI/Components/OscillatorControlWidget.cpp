@@ -1,9 +1,28 @@
-#include "UI/OscillatorControlWidget.hpp"
+#include "UI/Components/OscillatorControlWidget.hpp"
+#include "Input.hpp"
+#include "Connection.hpp"
 
 OscillatorControlWidget::OscillatorControlWidget(Oscillator* oscillator, QWidget* parent)
     : QWidget(parent), oscillator(oscillator) {
 
     QVBoxLayout* layout = new QVBoxLayout(this);
+
+    // Level Slider
+    QLabel* levelLabel = new QLabel(QString("Level: %1 %").arg(oscillator->level * 100));
+    QSlider* levelSlider = new QSlider(Qt::Horizontal);
+    levelSlider->setTickInterval(1);
+    levelSlider->setTickPosition(QSlider::TicksAbove);
+    levelSlider->setMinimum(0);
+    levelSlider->setMaximum(10);
+    levelSlider->setValue(oscillator->level * 10);
+
+    layout->addWidget(levelLabel);
+    layout->addWidget(levelSlider);
+
+    QObject::connect(levelSlider, &QSlider::valueChanged, [oscillator, levelSlider, levelLabel](int value) {
+        oscillator->level = value / (float)10;
+        levelLabel->setText(QString("Level: %1 %").arg(levelSlider->value() * 10));
+    });
 
     // --- WaveType Slider + Label ---
     QLabel* waveLabel = new QLabel(QString("Wave: %1").arg(waveTypeToString(oscillator->waveType)));

@@ -1,4 +1,4 @@
-#include "UI/LPFControlWidget.hpp"
+#include "UI/Components/LPFControlWidget.hpp"
 
 LPFControlWidget::LPFControlWidget(LPF* lpf, QWidget *parent)
     : QWidget(parent), lpf(lpf) {

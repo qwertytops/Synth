@@ -1,4 +1,6 @@
-#include "UI/SynthControlWidget.hpp"
+#include "UI/Components/SynthControlWidget.hpp"
+#include "Input.hpp"
+#include "Connection.hpp"
 
 SynthControlWidget::SynthControlWidget(Synth* synth, QWidget* parent)
     : QWidget(parent), synth(synth) {

@@ -1,25 +1,27 @@
 #pragma once
 
 #include <vector>
+#include <utility>
+#include <algorithm>
 #include <thread>
 #include <mutex>
+#include <set>
 
 #include "CoreAudioWaveMaker.hpp"
 #include "Oscillator.hpp"
 #include "ADSR.hpp"
 #include "BiquadFilter.hpp"
 #include "Note.hpp"
+#include "Component.hpp"
 
 using namespace std;
 
 class Synth {
 public:
-    double volume = 0.2;
+    double volume = 0.5;
     int octave = 4;
 
-    vector<Oscillator*> oscillators;
-    vector<ADSR*> envelopes;
-    vector<BiquadFilter*> filters;
+    vector<SynthComponent*> components;
 
     bool keys[18];
     vector<Note> notesBeingPlayed;
@@ -28,8 +30,12 @@ public:
     double MakeSound(double elapsed);
     void ProcessInput(int octave);
 
-    Synth(vector<Oscillator*> oscs, vector<ADSR*> envs, vector<BiquadFilter*> filters, int octave);
+    Synth(vector<SynthComponent*> components, int octave);
 
 private:
     CoreAudioWaveMaker<float> player;
+
+    int inputs = 0;
+    vector<SynthComponent*> establishProcessingOrder();
+    vector<SynthComponent*> processingOrder;
 };

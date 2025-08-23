@@ -1,29 +1,27 @@
 #pragma once
 
 #include <iostream>
+#include <utility>
 #include "Note.hpp"
+#include "Component.hpp"
 
 using namespace std;
 
-class ADSR {
+class ADSR : public SynthComponent {
 public:
     double attack;
     double decay;
     double sustain;
     double release;
 
-    // double triggerOn = 0;
-    // double triggerOff = 0;
-
-    // bool noteOn = false;
-
     ADSR();
     ADSR(double a, double d, double s, double r);
 
-    double GetAmplitude(double time, Note* note);
-    // void NoteOn(double time);
-    // void NoteOff(double time);
+    void run(double elapsed);
 
 private:
-    // double offAmplitude;
+    double getAmplitude(double elapsed, Note* note);
+    enum Inputs {
+        MAIN
+    };
 };

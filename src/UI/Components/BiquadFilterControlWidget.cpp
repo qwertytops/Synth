@@ -1,14 +1,35 @@
-#include "UI/BiquadFilterControlWidget.hpp"
+#include "UI/Components/BiquadFilterControlWidget.hpp"
+#include "Input.hpp"
+#include "Connection.hpp"
 
 BiquadFilterControlWidget::BiquadFilterControlWidget(BiquadFilter *filter, QWidget *parent)
     : QWidget(parent), filter(filter) {
 
-    QHBoxLayout* layout = new QHBoxLayout(this);
+    QVBoxLayout* layout = new QVBoxLayout(this);
+
+    QHBoxLayout* controlsLayout = new QHBoxLayout;
+
+    // Title
+    QHBoxLayout* titleLayout = new QHBoxLayout;
+    QLabel* title = new QLabel("<b>Filter</b>");
+    title->setTextFormat(Qt::RichText);
+    QPushButton* bypassButton = new QPushButton;
+    bypassButton->setText("Bypass");
+    bypassButton->setCheckable(true);
+    bypassButton->setChecked(false);
+    bypassButton->setMaximumWidth(100);
+
+    QObject::connect(bypassButton, &QPushButton::toggled, [filter](bool value) {
+        filter->setBypass(value);
+    });
+
+    titleLayout->addWidget(title);
+    titleLayout->addWidget(bypassButton);
 
     // Frequency
     QVBoxLayout* freqLayout = new QVBoxLayout;
     QLabel* freqLabel = new QLabel(QString("Frequency: %1 Hz").arg(filter->getFrequency()));
-    QDial* freqDial = new QDial;
+    DragOnlyDial* freqDial = new DragOnlyDial;
     freqDial->setMinimum(0);
     freqDial->setMaximum(20000);
     freqDial->setValue(filter->getFrequency());
@@ -24,14 +45,14 @@ BiquadFilterControlWidget::BiquadFilterControlWidget(BiquadFilter *filter, QWidg
     // Q
     QVBoxLayout* qLayout = new QVBoxLayout;
     QLabel* qLabel = new QLabel(QString("Q: %1").arg(filter->getQ() / 10.0));
-    QDial* qDial = new QDial;
+    DragOnlyDial* qDial = new DragOnlyDial;
     qDial->setMinimum(0.1 * 10);
     qDial->setMaximum(10 * 10);
     qDial->setValue(filter->getQ());
 
     QObject::connect(qDial, &QSlider::valueChanged, [filter, qLabel](int value) {
         filter->setQ(value * 10);
-        qLabel->setText(QString("Q: %1").arg(filter->getQ() / 10.0));
+        qLabel->setText(QString("Q: %1").arg(value / 10.0));
     });
 
     qLayout->addWidget(qLabel);
@@ -40,7 +61,7 @@ BiquadFilterControlWidget::BiquadFilterControlWidget(BiquadFilter *filter, QWidg
     // Gain
     QVBoxLayout* gainLayout = new QVBoxLayout;
     QLabel* gainLabel = new QLabel(QString("Gain: %1 dB").arg(filter->getGain() / 2.0));
-    QDial* gainDial = new QDial;
+    DragOnlyDial* gainDial = new DragOnlyDial;
     gainDial->setMinimum(-10 * 2);
     gainDial->setMaximum(10 * 2);
     gainDial->setValue(filter->getGain());
@@ -68,9 +89,12 @@ BiquadFilterControlWidget::BiquadFilterControlWidget(BiquadFilter *filter, QWidg
         filter->setMode(static_cast<FilterMode>(value));
     });
 
+    // Assemble layout
+    controlsLayout->addLayout(freqLayout);
+    controlsLayout->addLayout(qLayout);
+    controlsLayout->addLayout(gainLayout);
+    controlsLayout->addLayout(modeLayout);
 
-    layout->addLayout(freqLayout);
-    layout->addLayout(qLayout);
-    layout->addLayout(gainLayout);
-    layout->addLayout(modeLayout);
+    layout->addLayout(titleLayout);
+    layout->addLayout(controlsLayout);
 }

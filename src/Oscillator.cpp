@@ -1,26 +1,49 @@
 #include "Oscillator.hpp"
+#include "Input.hpp"
+#include "Connection.hpp"
 
-double Oscillator::run(double elapsed, int noteMidi) {
-    double frequency = 440.0 * pow(2.0, ((noteMidi + 12 * octave) - 69) / 12.0);
+void Oscillator::run(double elapsed) {
+
+    for (auto& pair : inputs.at(Inputs::MAIN)->pairs) {
+        Note* note = pair.first;
+        double sample = getSample(elapsed, note);
+
+        for (auto& conn : outgoingConnections) {
+            conn->destination->pairs.push_back(make_pair(note, sample));
+        }
+    }
+}
+
+double Oscillator::getSample(double elapsed, Note* note) {
+    double frequency = 440.0 * pow(2.0, ((note->midiNum + 12 * octave) - 69) / 12.0);
     double detuneRatio = pow(2.0, detune / 1200.0);
     frequency = frequency * detuneRatio;
 
+    double sample = 0.0;
     switch (waveType) {
     case WaveType::SINE:
-        return SineWave(elapsed, frequency);
+        sample = SineWave(elapsed, frequency);
+        break;
     case WaveType::SQUARE:
-        return SquareWave(elapsed, frequency);
+        sample = SquareWave(elapsed, frequency);
+        break;
     case WaveType::TRI:
-        return TriangleWave(elapsed, frequency);
+        sample = TriangleWave(elapsed, frequency);
+        break;
     case WaveType::SAW:
-        return SawWave(elapsed, frequency);
+        sample = SawWave(elapsed, frequency);
+        break;
     case WaveType::SAW2:
-        return Saw2Wave(elapsed, frequency);
+        sample = Saw2Wave(elapsed, frequency);
+        break;
     case WaveType::NOISE:
-        return frequency ? Noise() : 0;
+        sample = frequency ? Noise() : 0;
+        break;
     default:
-        return 0;
+        sample = 0;
+        break;
     }
+    return sample * level;
 }
 
 Oscillator::Oscillator(WaveType w, int octave) {
