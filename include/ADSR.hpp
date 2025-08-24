@@ -3,7 +3,8 @@
 #include <iostream>
 #include <utility>
 #include "Note.hpp"
-#include "Component.hpp"
+#include "SynthComponent.hpp"
+#include "SynthComponentFactory.hpp"
 
 using namespace std;
 
@@ -25,3 +26,5 @@ private:
         MAIN
     };
 };
+
+REGISTER_COMPONENT(ADSR);

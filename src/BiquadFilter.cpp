@@ -4,7 +4,18 @@
 
 // #include <iostream>
 
-void BiquadFilter::run(double elapsed) {
+BiquadFilter::BiquadFilter() {
+    this->mode = FilterMode::LOWPASS;
+    this->frequency = 10000;
+    this->Q = 1;
+    this->gainDB = 0.0;
+    this->sampleRate = 44100;
+
+    calculateCoefficients();
+}
+
+void BiquadFilter::run(double elapsed)
+{
     for (auto& pair : inputs.at(Inputs::MAIN)->pairs) {
         Note* note = pair.first;
         double value = pair.second;

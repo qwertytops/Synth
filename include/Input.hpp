@@ -2,7 +2,7 @@
 #include <vector>
 #include <utility>
 
-#include "Component.hpp"
+#include "SynthComponent.hpp"
 
 using namespace std;
 

@@ -12,7 +12,7 @@
 #include "ADSR.hpp"
 #include "BiquadFilter.hpp"
 #include "Note.hpp"
-#include "Component.hpp"
+#include "SynthComponent.hpp"
 
 using namespace std;
 

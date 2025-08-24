@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Component.hpp"
+#include "SynthComponent.hpp"
 // class Component;
 
 class Connection {

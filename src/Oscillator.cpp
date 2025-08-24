@@ -46,7 +46,14 @@ double Oscillator::getSample(double elapsed, Note* note) {
     return sample * level;
 }
 
-Oscillator::Oscillator(WaveType w, int octave) {
+Oscillator::Oscillator() {
+    waveType = WaveType::SINE;
+    this->octave = 4;
+    this->detune = 0;
+}
+
+Oscillator::Oscillator(WaveType w, int octave)
+{
     waveType = w;
     this->octave = octave;
     this->detune = 0;

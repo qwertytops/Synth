@@ -4,15 +4,18 @@
 #include <limits>
 #include <utility>
 
-#include "Component.hpp"
+#include "SynthComponent.hpp"
+#include "SynthComponentFactory.hpp"
 #include "FilterMode.hpp"
 
 using namespace std;
 
 class BiquadFilter : public SynthComponent {
 public:
+    BiquadFilter();
     BiquadFilter(FilterMode mode, double frequency, double Q, double gainDB = 0.0)
-        : mode(mode), sampleRate(44100), frequency(frequency), Q(Q), gainDB(gainDB) {
+        : mode(mode), sampleRate(44100), frequency(frequency), Q(Q), gainDB(gainDB)
+    {
         calculateCoefficients();
     }
 
@@ -56,3 +59,5 @@ private:
         GAIN,
     };
 };
+
+REGISTER_COMPONENT(BiquadFilter);

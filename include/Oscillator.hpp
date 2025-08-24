@@ -2,7 +2,8 @@
 #include <cmath>
 #include <utility>
 
-#include "Component.hpp"
+#include "SynthComponent.hpp"
+#include "SynthComponentFactory.hpp"
 #include "WaveType.hpp"
 
 using namespace std;
@@ -16,6 +17,7 @@ public:
 
     void run(double elapsed);
 
+    Oscillator();
     Oscillator(WaveType w, int octave);
     Oscillator(WaveType w, int octave, int detune);
 
@@ -39,3 +41,5 @@ private:
         SYNC,
     };
 };
+
+REGISTER_COMPONENT(Oscillator);
