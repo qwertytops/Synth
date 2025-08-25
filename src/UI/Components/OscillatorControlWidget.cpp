@@ -2,8 +2,10 @@
 #include "Input.hpp"
 #include "Connection.hpp"
 
-OscillatorControlWidget::OscillatorControlWidget(Oscillator* oscillator, QWidget* parent)
+OscillatorControlWidget::OscillatorControlWidget(Oscillator* oscillator, QSize bounds, QWidget* parent)
     : QWidget(parent), oscillator(oscillator) {
+
+    this->setFixedSize(bounds.width(), bounds.height());
 
     QVBoxLayout* layout = new QVBoxLayout(this);
 

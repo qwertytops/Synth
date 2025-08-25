@@ -31,7 +31,6 @@ EmptySlot::EmptySlot(Synth* synth)
 }
 
 void EmptySlot::onClick() {
-    qWarning("Showing menu");
     menu->exec(QCursor::pos());
 }
 
@@ -57,7 +56,43 @@ void EmptySlot::initialiseComponentMenu() {
         QObject::connect(action, &QAction::triggered, [this, className]() {
             SynthComponent* comp = SynthComponentFactory::instance().create(className.toStdString());
             if (comp) {
-                // synth->components.push_back(comp);
+                if (auto osc = dynamic_cast<Oscillator*>(comp)) {
+                    // Create the new control widget
+                    OscillatorControlWidget* control = new OscillatorControlWidget(osc, this->size());
+
+                    // Get the grid layout
+                    auto* grid = qobject_cast<QGridLayout*>(this->parentWidget()->layout());
+                    if (!grid)
+                        return;
+
+                    // Find the current position of `this` in the grid
+                    int row = -1, col = -1, rowSpan = 1, colSpan = 1;
+                    bool found = false;
+                    for (int r = 0; r < grid->rowCount() && !found; ++r) {
+                        for (int c = 0; c < grid->columnCount(); ++c) {
+                            QLayoutItem* item = grid->itemAtPosition(r, c);
+                            if (item && item->widget() == this) {
+                                row = r;
+                                col = c;
+                                found = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!found)
+                        return;
+
+                    // Remove and delete the old widget
+                    QLayoutItem* item = grid->takeAt(grid->indexOf(this));
+                    delete item;             // removes layout item
+                    this->hide();
+                    this->deleteLater();     // schedule deletion
+
+                    // Place the new widget in the same grid cell
+                    grid->addWidget(control, row, col, rowSpan, colSpan);
+                }
+
             } else {
                 qWarning("Class '%s' not found in registry", qPrintable(className));
             }

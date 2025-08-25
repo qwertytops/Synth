@@ -5,6 +5,7 @@
 #include <QDial>
 #include <QLabel>
 #include <QBoxLayout>
+#include <QSize>
 
 #include <string>
 
@@ -14,7 +15,7 @@ class OscillatorControlWidget : public QWidget {
     // Q_OBJECT
 
 public:
-    explicit OscillatorControlWidget(Oscillator* oscillator, QWidget* parent = nullptr);
+    explicit OscillatorControlWidget(Oscillator* oscillator, QSize bounds, QWidget* parent = nullptr);
 
 private:
     Oscillator* oscillator;

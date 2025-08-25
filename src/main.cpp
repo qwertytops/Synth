@@ -101,7 +101,7 @@ int main(int argc, char* argv[]) {
         for (int c = 0; c < cols; ++c) {
             gridLayout->setColumnStretch(c, 1);
 
-            EmptySlot* slot = new EmptySlot;
+            EmptySlot* slot = new EmptySlot(&synth);
             gridLayout->addWidget(slot, r, c);
         }
     }
