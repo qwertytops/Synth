@@ -1,3 +1,5 @@
+#pragma once
+
 #include <string>
 #include <vector>
 #include <utility>
@@ -10,12 +12,15 @@ class Input {
 public:
     vector<pair<Note*, double>> pairs = {};
 
-    SynthComponent* parent;
     string name;
+    SynthComponent* parent;
 
     void reset() {
         pairs.clear();
     }
-private:
 
+    Input(string name, SynthComponent* parent = nullptr)
+        : name(name), parent(parent) {}
+
+private:
 };

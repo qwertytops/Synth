@@ -6,6 +6,8 @@
 #include <QLabel>
 #include <QBoxLayout>
 #include <QSize>
+#include <QMenu>
+#include <QPushButton>
 
 #include <string>
 

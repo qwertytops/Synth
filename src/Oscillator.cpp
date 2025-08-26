@@ -2,11 +2,15 @@
 #include "Input.hpp"
 #include "Connection.hpp"
 
-void Oscillator::run(double elapsed) {
+#include <iostream>
 
+void Oscillator::run(double elapsed) {
+    // cout << name << id << " running" << endl;
+    // cout << "pairs: " << inputs.at(Inputs::MAIN)->pairs.size() << endl;
     for (auto& pair : inputs.at(Inputs::MAIN)->pairs) {
         Note* note = pair.first;
         double sample = getSample(elapsed, note);
+
 
         for (auto& conn : outgoingConnections) {
             conn->destination->pairs.push_back(make_pair(note, sample));
@@ -50,18 +54,23 @@ Oscillator::Oscillator() {
     waveType = WaveType::SINE;
     this->octave = 4;
     this->detune = 0;
+    initialiseInputs();
+    name = "Oscillator";
 }
 
-Oscillator::Oscillator(WaveType w, int octave)
-{
+Oscillator::Oscillator(WaveType w, int octave) {
     waveType = w;
     this->octave = octave;
     this->detune = 0;
+    initialiseInputs();
+    name = "Oscillator";
 }
 Oscillator::Oscillator(WaveType w, int octave, int detune) {
     waveType = w;
     this->octave = octave;
     this->detune = detune;
+    initialiseInputs();
+    name = "Oscillator";
 }
 
 double Oscillator::SineWave(double elapsed, double frequency) {
@@ -95,7 +104,14 @@ double Oscillator::Noise() {
     return 2 * ((double)rand() / (double)RAND_MAX - 1);
 }
 
-double Oscillator::HZtoAV(double hz)
-{
+double Oscillator::HZtoAV(double hz) {
     return hz * 2 * M_PI;
+}
+
+void Oscillator::initialiseInputs() {
+    inputs.push_back(new Input("Main", this));
+    inputs.push_back(new Input("Frequency", this));
+    inputs.push_back(new Input("Amplitude", this));
+    inputs.push_back(new Input("Pulse Width", this));
+    inputs.push_back(new Input("Sync", this));
 }

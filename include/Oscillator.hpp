@@ -2,7 +2,7 @@
 #include <cmath>
 #include <utility>
 
-#include "SynthComponent.hpp"
+#include "Synth.hpp"
 #include "SynthComponentFactory.hpp"
 #include "WaveType.hpp"
 
@@ -16,6 +16,7 @@ public:
     int detune;
 
     void run(double elapsed);
+    
 
     Oscillator();
     Oscillator(WaveType w, int octave);
@@ -40,6 +41,7 @@ private:
         PULSE_WIDTH,
         SYNC,
     };
+    void initialiseInputs();
 };
 
 REGISTER_COMPONENT(Oscillator);

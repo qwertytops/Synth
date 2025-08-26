@@ -2,58 +2,92 @@
 #include "Input.hpp"
 #include "Connection.hpp"
 
+#include <iostream>
+#include <unordered_set>
+#include <cmath>
+
 double Synth::MakeSound(double elapsed) {
-    double output = 0.0;
-    vector<Note> notesToKeep = {};
     mtx.lock();
+
+    for (auto& input : getAllInputs()) {
+        input->reset();
+    }
+
+    // cout << "nbp: " << notesBeingPlayed.size() << endl;
+    // cout << "inputs count: " << inputs << endl;
+
+    // auto inputsList = getAllInputs();
+    // for (auto* in : inputsList) {
+    //     cout << "Input " << in->name << " pairs before reset: " << in->pairs.size() << endl;
+    // }
+    
     for (auto& note : notesBeingPlayed) {
-        double result = 0;
         for (int i = 0; i < inputs; i++) {
-            components[i]->inputs.at(0)->pairs.push_back(make_pair(&note, 0));
+            components[i]->inputs.at(0)->pairs.push_back(make_pair(note, 0));
         }
     }
     for (auto& component : components) {
-        // make sure something is connected to mainOut (which doesnt exist yet)
+        // cout << "running " << component->name << component->id << endl;
         component->run(elapsed);
     }
-        // output = mainOut->value or something;
-    // for (auto& note : notesBeingPlayed) {
-    //     double noteRes = 0;
-    //     for (auto osc : oscillators) {
-    //         noteRes += osc->run(elapsed, note.midiNum);
-    //     }
-    //     bool keepNote = false;
-    //     for (auto env : envelopes) {
-    //         double amp = env->GetAmplitude(elapsed, &note);
-    //         noteRes *= amp;
-    //         if (note.active || amp > 0.0001) {
-    //             keepNote = true;
-    //         }
-    //     }
-    //     if (envelopes.empty()) {
-    //         if (note.active) keepNote = true;
-    //     }
-    //     if (keepNote) {
-    //         notesToKeep.push_back(note);
-    //     }
-    //     result += noteRes;
+
+    double result = 0.0;
+
+    // Rebuild notesBeingPlayed by inspecting mainOut->pairs.
+    // Keep notes that are still active or have non-negligible amplitude,
+    // and deduplicate so the same Note* isn't added multiple times.
+    const double AMPLITUDE_THRESH = 0.0001;
+    std::unordered_set<Note*> seen;
+    vector<Note*> keptNotes;
+    for (auto& pair : mainOut->pairs) {
+        Note* n = pair.first;
+        double amplitude = pair.second;
+        if (n == nullptr) continue;
+        if (n->active) { // add something like || std::fabs(amplitude) > AMPLITUDE_THRESH
+            if (seen.find(n) == seen.end()) {
+                seen.insert(n);
+                keptNotes.push_back(n);
+            }
+        }
+        result += amplitude;
+    }
+    notesBeingPlayed = std::move(keptNotes);
+
+    // if (result != 0) {
+    //     cout << result << endl;
     // }
-    // for (auto& filter : filters) {
-    //     result = filter->run(result);
-    // }
-    // notesBeingPlayed = std::move(notesToKeep);
     mtx.unlock();
-    return output * volume;
+    return result * volume;
 }
 
-Synth::Synth(vector<SynthComponent*> components, int octave)
-    : components(components),
-      player([this](double elapsed) { return this->MakeSound(elapsed); })
+Synth::Synth(int octave)
+    : player([this](double elapsed) { return this->MakeSound(elapsed); })
 {
+    mainOut = new Input("Main Out");
     processingOrder = establishProcessingOrder();
     player.Start();
     thread input([this, octave]() { this->ProcessInput(octave); });
     input.detach();
+}
+
+
+void Synth::addComponent(SynthComponent* comp) {
+    components.push_back(comp);
+    processingOrder = establishProcessingOrder();
+}
+
+vector<Input*> Synth::getAllInputs() {
+    vector<Input*> result = {};
+
+    result.push_back(mainOut);
+
+    for (auto& comp : components) {
+        for (auto& inp : comp->inputs) {
+            result.push_back(inp);
+        }
+    }
+
+    return result;
 }
 
 void Synth::ProcessInput(int octave) {
@@ -64,13 +98,13 @@ void Synth::ProcessInput(int octave) {
         mtx.lock();
         for (int k = 0; k < 18; k++) {
             if (keys[k] && !prevKeys[k]) {
-                Note n(k + 8*octave, player.GetTime());
+                Note* n = new Note(k + 8*octave, player.GetTime()); // check memory leaks
                 notesBeingPlayed.push_back(n);
             } else if (!keys[k] && prevKeys[k]) {
                 for (auto& note : notesBeingPlayed) {
-                    if (note.midiNum == k + 8*octave && note.active) {
-                        note.noteOff = player.GetTime();
-                        note.active = false;
+                    if (note->midiNum == k + 8*octave && note->active) {
+                        note->noteOff = player.GetTime();
+                        note->active = false;
                         break;
                     }
                 }
@@ -106,9 +140,15 @@ vector<SynthComponent*> Synth::establishProcessingOrder() {
         for (auto& conn : current->outgoingConnections) {
             conn->visited = true;
             bool noIncoming = true;
+
+            if (conn->destination->parent == nullptr) {
+                cout << "ignoring main out" << endl;
+                continue;
+            }
+
             for (auto& conn1 : conn->destination->parent->incomingConnections) {
                 if (!conn1->visited) {
-                    noIncoming = true;
+                    noIncoming = false; // chatgpt said it should be false but it was true before
                     break;
                 }
             }

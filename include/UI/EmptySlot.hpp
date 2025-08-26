@@ -18,6 +18,8 @@ public:
     EmptySlot(Synth* synth);
 
 private:
+    static int id;
+
     Synth* synth;
 
     QMenu* menu;

@@ -12,6 +12,7 @@
 #include "ADSR.hpp"
 #include "BiquadFilter.hpp"
 #include "Note.hpp"
+#include "Input.hpp"
 #include "SynthComponent.hpp"
 
 using namespace std;
@@ -24,13 +25,18 @@ public:
     vector<SynthComponent*> components;
 
     bool keys[18];
-    vector<Note> notesBeingPlayed;
+    vector<Note*> notesBeingPlayed;
     std::mutex mtx;
 
     double MakeSound(double elapsed);
     void ProcessInput(int octave);
 
-    Synth(vector<SynthComponent*> components, int octave);
+    Input* mainOut;
+
+    Synth(int octave);
+
+    void addComponent(SynthComponent*);
+    vector<Input*> getAllInputs();
 
 private:
     CoreAudioWaveMaker<float> player;

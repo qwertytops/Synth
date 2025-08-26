@@ -36,14 +36,7 @@ CGKeyCode keyCodes[18] = {
     4, 32, 38, 40, 31, 37, 35, 41, 39
 };
 
-Oscillator o1(WaveType::SINE, 4);
-Oscillator o2(WaveType::SINE, 3);
-
-ADSR env1(0.01, 0.01, 1.0, 0.01);
-
-BiquadFilter filter1(FilterMode::PEAK, 440, 1, 3);
-
-Synth synth({&o1, &o2, &env1, &filter1}, 0);
+Synth synth(0);
 
 bool isKeyPressed(CGKeyCode keycode) {
     return CGEventSourceKeyState(kCGEventSourceStateHIDSystemState, keycode);

@@ -1,5 +1,7 @@
 #include "UI/EmptySlot.hpp"
 
+int EmptySlot::id = 0;
+
 EmptySlot::EmptySlot(Synth* synth)
     : synth(synth) {
     this->setFlat(true);
@@ -57,6 +59,9 @@ void EmptySlot::initialiseComponentMenu() {
             SynthComponent* comp = SynthComponentFactory::instance().create(className.toStdString());
             if (comp) {
                 if (auto osc = dynamic_cast<Oscillator*>(comp)) {
+                    osc->synth = synth;
+                    synth->addComponent(osc);
+                    osc->id = id++;
                     // Create the new control widget
                     OscillatorControlWidget* control = new OscillatorControlWidget(osc, this->size());
 
