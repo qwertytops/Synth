@@ -2,11 +2,7 @@
 #include "Input.hpp"
 #include "Connection.hpp"
 
-#include <iostream>
-
 void Oscillator::run(double elapsed) {
-    // cout << name << id << " running" << endl;
-    // cout << "pairs: " << inputs.at(Inputs::MAIN)->pairs.size() << endl;
     for (auto& pair : inputs.at(Inputs::MAIN)->pairs) {
         Note* note = pair.first;
         double sample = getSample(elapsed, note);

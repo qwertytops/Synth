@@ -62,45 +62,52 @@ void EmptySlot::initialiseComponentMenu() {
                     osc->synth = synth;
                     synth->addComponent(osc);
                     osc->id = id++;
-                    // Create the new control widget
-                    OscillatorControlWidget* control = new OscillatorControlWidget(osc, this->size());
-
-                    // Get the grid layout
-                    auto* grid = qobject_cast<QGridLayout*>(this->parentWidget()->layout());
-                    if (!grid)
-                        return;
-
-                    // Find the current position of `this` in the grid
-                    int row = -1, col = -1, rowSpan = 1, colSpan = 1;
-                    bool found = false;
-                    for (int r = 0; r < grid->rowCount() && !found; ++r) {
-                        for (int c = 0; c < grid->columnCount(); ++c) {
-                            QLayoutItem* item = grid->itemAtPosition(r, c);
-                            if (item && item->widget() == this) {
-                                row = r;
-                                col = c;
-                                found = true;
-                                break;
-                            }
-                        }
-                    }
-
-                    if (!found)
-                        return;
-
-                    // Remove and delete the old widget
-                    QLayoutItem* item = grid->takeAt(grid->indexOf(this));
-                    delete item;             // removes layout item
-                    this->hide();
-                    this->deleteLater();     // schedule deletion
-
-                    // Place the new widget in the same grid cell
-                    grid->addWidget(control, row, col, rowSpan, colSpan);
+                    QWidget* control = new OscillatorControlWidget(osc, this->size());
+                    replaceGridItem(control);
+                } else if (auto env = dynamic_cast<ADSR*>(comp)) {
+                    env->synth = synth;
+                    synth->addComponent(env);
+                    env->id = id++;
+                    QWidget *control = new ADSRControlWidget(env, this->size());
+                    replaceGridItem(control);
                 }
-
             } else {
                 qWarning("Class '%s' not found in registry", qPrintable(className));
             }
         });
     }
+}
+
+void EmptySlot::replaceGridItem(QWidget* control) {
+    // Get the grid layout
+    auto* grid = qobject_cast<QGridLayout*>(this->parentWidget()->layout());
+    if (!grid)
+        return;
+
+    // Find the current position of `this` in the grid
+    int row = -1, col = -1, rowSpan = 1, colSpan = 1;
+    bool found = false;
+    for (int r = 0; r < grid->rowCount() && !found; ++r) {
+        for (int c = 0; c < grid->columnCount(); ++c) {
+            QLayoutItem* item = grid->itemAtPosition(r, c);
+            if (item && item->widget() == this) {
+                row = r;
+                col = c;
+                found = true;
+                break;
+            }
+        }
+    }
+
+    if (!found)
+        return;
+
+    // Remove and delete the old widget
+    QLayoutItem* item = grid->takeAt(grid->indexOf(this));
+    delete item;             // removes layout item
+    this->hide();
+    this->deleteLater();     // schedule deletion
+
+    // Place the new widget in the same grid cell
+    grid->addWidget(control, row, col, rowSpan, colSpan);
 }

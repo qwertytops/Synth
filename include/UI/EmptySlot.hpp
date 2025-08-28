@@ -9,6 +9,7 @@
 #include <QFile>
 
 #include "UI/Components/OscillatorControlWidget.hpp"
+#include "UI/Components/ADSRControlWidget.hpp"
 
 #include "SynthComponentFactory.hpp"
 #include "Synth.hpp"
@@ -26,4 +27,5 @@ private:
 
     void onClick();
     void initialiseComponentMenu();
+    void replaceGridItem(QWidget* control);
 };

@@ -1,9 +1,9 @@
 #pragma once
 
-#include <iostream>
 #include <utility>
+
 #include "Note.hpp"
-#include "SynthComponent.hpp"
+#include "Synth.hpp"
 #include "SynthComponentFactory.hpp"
 
 using namespace std;
@@ -25,6 +25,7 @@ private:
     enum Inputs {
         MAIN
     };
+    void initialiseInputs();
 };
 
 REGISTER_COMPONENT(ADSR);

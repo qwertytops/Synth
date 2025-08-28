@@ -2,8 +2,10 @@
 #include "Input.hpp"
 #include "Connection.hpp"
 
-ADSRControlWidget::ADSRControlWidget(ADSR* adsr, QWidget* parent)
+ADSRControlWidget::ADSRControlWidget(ADSR* adsr, QSize bounds, QWidget* parent)
     : QWidget(parent), adsr(adsr) {
+
+    this->setFixedSize(bounds.width(), bounds.height());
 
     QHBoxLayout* layout = new QHBoxLayout;
     

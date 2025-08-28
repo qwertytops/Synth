@@ -12,6 +12,8 @@ BiquadFilter::BiquadFilter() {
     this->sampleRate = 44100;
 
     calculateCoefficients();
+    initialiseInputs();
+    name = "BiquadFilter";
 }
 
 void BiquadFilter::run(double elapsed)
@@ -176,4 +178,11 @@ void BiquadFilter::calculateCoefficients() {
     b2 /= a0;
     a1 /= a0;
     a2 /= a0;
+}
+
+void BiquadFilter::initialiseInputs() {
+    inputs.push_back(new Input("Main", this));
+    inputs.push_back(new Input("Frequency", this));
+    inputs.push_back(new Input("Quality", this));
+    inputs.push_back(new Input("Gain", this));  
 }

@@ -4,7 +4,7 @@
 #include <limits>
 #include <utility>
 
-#include "SynthComponent.hpp"
+#include "Synth.hpp"
 #include "SynthComponentFactory.hpp"
 #include "FilterMode.hpp"
 
@@ -58,6 +58,7 @@ private:
         QUALITY,
         GAIN,
     };
+    void initialiseInputs();
 };
 
 REGISTER_COMPONENT(BiquadFilter);

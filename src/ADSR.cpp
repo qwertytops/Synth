@@ -7,6 +7,8 @@ ADSR::ADSR() {
     decay = 0.1;
     sustain = 1.0;
     release = 0.1;
+    initialiseInputs();
+    name = "ADSR";
 }
 
 ADSR::ADSR(double a, double d, double s, double r) {
@@ -14,6 +16,8 @@ ADSR::ADSR(double a, double d, double s, double r) {
     decay = d;
     sustain = s;
     release = r;
+    initialiseInputs();
+    name = "ADSR";
 }
 
 void ADSR::run(double elapsed) {
@@ -60,4 +64,8 @@ double ADSR::getAmplitude(double elapsed, Note* note) {
     // cout << "env: " << amplitude << endl;
 
     return amplitude;
+}
+
+void ADSR::initialiseInputs() {
+    inputs.push_back(new Input("Main", this));
 }
