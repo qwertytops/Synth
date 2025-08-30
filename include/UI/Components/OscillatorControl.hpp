@@ -18,9 +18,7 @@ class OscillatorControl : public Control {
     // Q_OBJECT
 
 public:
-    explicit OscillatorControl(Oscillator* oscillator, QSize bounds, QWidget* parent = nullptr);
-
-void NewFunction(Oscillator * oscillator);
+    explicit OscillatorControl(Oscillator *oscillator, QSize bounds);
 
 private:
     Oscillator* oscillator;

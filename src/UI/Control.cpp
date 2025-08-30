@@ -26,4 +26,6 @@ QMenu* Control::inputsMenu()
             });
         }
     }
+
+    return menu;
 }

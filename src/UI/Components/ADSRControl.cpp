@@ -2,12 +2,15 @@
 #include "Input.hpp"
 #include "Connection.hpp"
 
-ADSRControl::ADSRControl(ADSR* adsr, QSize bounds, QWidget* parent)
-    : QWidget(parent), adsr(adsr) {
+ADSRControl::ADSRControl(ADSR* adsr, QSize bounds)
+    : adsr(adsr) {
+    this->parentComponent = adsr;
 
     this->setFixedSize(bounds.width(), bounds.height());
 
-    QHBoxLayout* layout = new QHBoxLayout;
+    QVBoxLayout* layout = new QVBoxLayout;
+
+    QHBoxLayout* slidersLayout = new QHBoxLayout;
     
     // Attack
     QVBoxLayout* attackLayout = new QVBoxLayout;
@@ -26,7 +29,7 @@ ADSRControl::ADSRControl(ADSR* adsr, QSize bounds, QWidget* parent)
     });
     attackLayout->addWidget(attackLabel);
     attackLayout->addWidget(attackSlider);
-    layout->addLayout(attackLayout);
+    slidersLayout->addLayout(attackLayout);
 
     // Decay
     QVBoxLayout* decayLayout = new QVBoxLayout;
@@ -45,7 +48,7 @@ ADSRControl::ADSRControl(ADSR* adsr, QSize bounds, QWidget* parent)
     });
     decayLayout->addWidget(decayLabel);
     decayLayout->addWidget(decaySlider);
-    layout->addLayout(decayLayout);
+    slidersLayout->addLayout(decayLayout);
 
     // Sustain
     QVBoxLayout* sustainLayout = new QVBoxLayout;
@@ -64,7 +67,7 @@ ADSRControl::ADSRControl(ADSR* adsr, QSize bounds, QWidget* parent)
     });
     sustainLayout->addWidget(sustainLabel);
     sustainLayout->addWidget(sustainSlider);
-    layout->addLayout(sustainLayout);
+    slidersLayout->addLayout(sustainLayout);
 
     // Release
     QVBoxLayout* releaseLayout = new QVBoxLayout;
@@ -83,10 +86,18 @@ ADSRControl::ADSRControl(ADSR* adsr, QSize bounds, QWidget* parent)
     });
     releaseLayout->addWidget(releaseLabel);
     releaseLayout->addWidget(releaseSlider);
-    layout->addLayout(releaseLayout);
+    slidersLayout->addLayout(releaseLayout);
 
+    layout->addLayout(slidersLayout);
+
+    QPushButton* button = new QPushButton("Output: --", this);
+
+    connect(button, &QPushButton::clicked, this, [this]() {
+        QMenu* menu = inputsMenu();
+
+        menu->exec(QCursor::pos());
+    });
+
+    layout->addWidget(button);
     setLayout(layout);
-
-    this->setMinimumHeight(150);
-
 }

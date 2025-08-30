@@ -2,7 +2,7 @@
 #include "Input.hpp"
 #include "Connection.hpp"
 
-OscillatorControl::OscillatorControl(Oscillator* oscillator, QSize bounds, QWidget* parent)
+OscillatorControl::OscillatorControl(Oscillator* oscillator, QSize bounds)
     : oscillator(oscillator) {
     this->parentComponent = oscillator;
 
@@ -91,7 +91,6 @@ OscillatorControl::OscillatorControl(Oscillator* oscillator, QSize bounds, QWidg
         oscillator->detune = value;
         detuneLabel->setText(QString("Detune: %1 c").arg(value));
     });
-
 
     QPushButton* button = new QPushButton("Output: --", this);
 
