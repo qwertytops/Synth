@@ -8,8 +8,8 @@
 #include <QMenu>
 #include <QFile>
 
-#include "UI/Components/OscillatorControlWidget.hpp"
-#include "UI/Components/ADSRControlWidget.hpp"
+#include "UI/Components/OscillatorControl.hpp"
+#include "UI/Components/ADSRControl.hpp"
 
 #include "SynthComponentFactory.hpp"
 #include "Synth.hpp"

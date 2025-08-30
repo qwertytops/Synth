@@ -1,8 +1,8 @@
-#include "UI/Components/BiquadFilterControlWidget.hpp"
+#include "UI/Components/BiquadFilterControl.hpp"
 #include "Input.hpp"
 #include "Connection.hpp"
 
-BiquadFilterControlWidget::BiquadFilterControlWidget(BiquadFilter *filter, QWidget *parent)
+BiquadFilterControl::BiquadFilterControl(BiquadFilter *filter, QWidget *parent)
     : QWidget(parent), filter(filter) {
 
     QVBoxLayout* layout = new QVBoxLayout(this);

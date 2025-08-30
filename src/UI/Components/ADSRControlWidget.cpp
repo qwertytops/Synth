@@ -1,8 +1,8 @@
-#include "UI/Components/ADSRControlWidget.hpp"
+#include "UI/Components/ADSRControl.hpp"
 #include "Input.hpp"
 #include "Connection.hpp"
 
-ADSRControlWidget::ADSRControlWidget(ADSR* adsr, QSize bounds, QWidget* parent)
+ADSRControl::ADSRControl(ADSR* adsr, QSize bounds, QWidget* parent)
     : QWidget(parent), adsr(adsr) {
 
     this->setFixedSize(bounds.width(), bounds.height());
@@ -13,6 +13,10 @@ ADSRControlWidget::ADSRControlWidget(ADSR* adsr, QSize bounds, QWidget* parent)
     QVBoxLayout* attackLayout = new QVBoxLayout;
     QSlider* attackSlider = new QSlider(Qt::Vertical);
     QLabel* attackLabel = new QLabel(QString("%1 ms").arg(adsr->attack * 1000));
+
+    attackLabel->setMinimumWidth(60);
+    attackSlider->setMinimumWidth(60);
+
     attackSlider->setMinimum(0);
     attackSlider->setMaximum(1000);
     attackSlider->setValue(adsr->attack * 1000);
@@ -28,6 +32,10 @@ ADSRControlWidget::ADSRControlWidget(ADSR* adsr, QSize bounds, QWidget* parent)
     QVBoxLayout* decayLayout = new QVBoxLayout;
     QSlider* decaySlider = new QSlider(Qt::Vertical);
     QLabel* decayLabel = new QLabel(QString("%1 ms").arg(adsr->decay * 1000));
+
+    decayLabel->setMinimumWidth(60);
+    decaySlider->setMinimumWidth(60);
+
     decaySlider->setMinimum(0);
     decaySlider->setMaximum(1000);
     decaySlider->setValue(adsr->decay * 1000);
@@ -43,6 +51,10 @@ ADSRControlWidget::ADSRControlWidget(ADSR* adsr, QSize bounds, QWidget* parent)
     QVBoxLayout* sustainLayout = new QVBoxLayout;
     QSlider* sustainSlider = new QSlider(Qt::Vertical);
     QLabel* sustainLabel = new QLabel(QString("%1 %").arg(adsr->sustain * 100));
+
+    sustainLabel->setMinimumWidth(60);
+    sustainSlider->setMinimumWidth(60);
+
     sustainSlider->setMinimum(0);
     sustainSlider->setMaximum(100);
     sustainSlider->setValue(adsr->sustain * 100);
@@ -58,6 +70,10 @@ ADSRControlWidget::ADSRControlWidget(ADSR* adsr, QSize bounds, QWidget* parent)
     QVBoxLayout* releaseLayout = new QVBoxLayout;
     QSlider* releaseSlider = new QSlider(Qt::Vertical);
     QLabel* releaseLabel = new QLabel(QString("%1 ms").arg(adsr->release * 1000));
+
+    releaseLabel->setMinimumWidth(60);
+    releaseSlider->setMinimumWidth(60);
+
     releaseSlider->setMinimum(0);
     releaseSlider->setMaximum(1000);
     releaseSlider->setValue(adsr->release * 1000);
@@ -72,4 +88,5 @@ ADSRControlWidget::ADSRControlWidget(ADSR* adsr, QSize bounds, QWidget* parent)
     setLayout(layout);
 
     this->setMinimumHeight(150);
+
 }

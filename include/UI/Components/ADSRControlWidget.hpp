@@ -8,9 +8,9 @@
 
 #include "ADSR.hpp"
 
-class ADSRControlWidget : public QWidget {
+class ADSRControl : public QWidget {
 public:
-    explicit ADSRControlWidget(ADSR* adsr, QSize bounds, QWidget* parent = nullptr);
+    explicit ADSRControl(ADSR* adsr, QSize bounds, QWidget* parent = nullptr);
 
 private:
     ADSR* adsr;

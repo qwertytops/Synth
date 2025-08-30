@@ -7,9 +7,9 @@
 
 #include "LPF.hpp"
 
-class LPFControlWidget : public QWidget {
+class LPFControl : public QWidget {
 public:
-    explicit LPFControlWidget(LPF* lpf, QWidget* parent = nullptr);
+    explicit LPFControl(LPF* lpf, QWidget* parent = nullptr);
 
 private:
     LPF* lpf;

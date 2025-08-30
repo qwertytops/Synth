@@ -12,12 +12,15 @@
 #include <string>
 
 #include "Oscillator.hpp"
+#include "UI/Control.hpp"
 
-class OscillatorControlWidget : public QWidget {
+class OscillatorControl : public Control {
     // Q_OBJECT
 
 public:
-    explicit OscillatorControlWidget(Oscillator* oscillator, QSize bounds, QWidget* parent = nullptr);
+    explicit OscillatorControl(Oscillator* oscillator, QSize bounds, QWidget* parent = nullptr);
+
+void NewFunction(Oscillator * oscillator);
 
 private:
     Oscillator* oscillator;

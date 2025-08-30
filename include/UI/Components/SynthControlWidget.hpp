@@ -9,10 +9,10 @@
 
 #include "Synth.hpp"
 
-class SynthControlWidget : public QWidget {
+class SynthControl : public QWidget {
 
 public:
-    explicit SynthControlWidget(Synth* synth, QWidget* parent = nullptr);
+    explicit SynthControl(Synth* synth, QWidget* parent = nullptr);
 
 private:
     Synth* synth;

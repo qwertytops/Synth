@@ -1,9 +1,10 @@
-#include "UI/Components/OscillatorControlWidget.hpp"
+#include "UI/Components/OscillatorControl.hpp"
 #include "Input.hpp"
 #include "Connection.hpp"
 
-OscillatorControlWidget::OscillatorControlWidget(Oscillator* oscillator, QSize bounds, QWidget* parent)
-    : QWidget(parent), oscillator(oscillator) {
+OscillatorControl::OscillatorControl(Oscillator* oscillator, QSize bounds, QWidget* parent)
+    : oscillator(oscillator) {
+    this->parentComponent = oscillator;
 
     this->setFixedSize(bounds.width(), bounds.height());
 
@@ -95,30 +96,7 @@ OscillatorControlWidget::OscillatorControlWidget(Oscillator* oscillator, QSize b
     QPushButton* button = new QPushButton("Output: --", this);
 
     connect(button, &QPushButton::clicked, this, [this]() {
-        QMenu* menu = new QMenu(this);
-
-        // add mainOut to menu
-        QAction* action = menu->addAction("Main Out");
-        connect(action, &QAction::triggered, this, [this]() {
-            Input* selected = this->oscillator->synth->mainOut;
-            Connection* conn = new Connection(this->oscillator, selected);
-            this->oscillator->outgoingConnections.push_back(conn);
-        });
-        
-        // add all other components' inputs
-        for (auto& comp : this->oscillator->synth->components) {
-            QMenu* submenu = menu->addMenu(QString::fromStdString(comp->name) + QString(" %1").arg(comp->id));
-            for (int i = 0; i < comp->inputs.size(); ++i) {
-                QAction* action = submenu->addAction(QString::fromStdString(comp->inputs[i]->name));
-                action->setData(i); // store index of Input
-                connect(action, &QAction::triggered, this, [this, comp, i]() {
-                    Input* selected = comp->inputs[i];
-                    Connection* conn = new Connection(this->oscillator, selected);
-                    this->oscillator->outgoingConnections.push_back(conn);
-                });
-            }
-        }
-        
+        QMenu* menu = inputsMenu();
 
         menu->exec(QCursor::pos());
     });

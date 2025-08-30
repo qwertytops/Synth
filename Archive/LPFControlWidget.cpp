@@ -1,6 +1,6 @@
-#include "UI/Components/LPFControlWidget.hpp"
+#include "UI/Components/LPFControl.hpp"
 
-LPFControlWidget::LPFControlWidget(LPF* lpf, QWidget *parent)
+LPFControl::LPFControl(LPF* lpf, QWidget *parent)
     : QWidget(parent), lpf(lpf) {
 
     QVBoxLayout* layout = new QVBoxLayout(this);

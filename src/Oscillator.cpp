@@ -7,7 +7,6 @@ void Oscillator::run(double elapsed) {
         Note* note = pair.first;
         double sample = getSample(elapsed, note);
 
-
         for (auto& conn : outgoingConnections) {
             conn->destination->pairs.push_back(make_pair(note, sample));
         }

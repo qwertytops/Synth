@@ -1,8 +1,8 @@
-#include "UI/Components/SynthControlWidget.hpp"
+#include "UI/Components/SynthControl.hpp"
 #include "Input.hpp"
 #include "Connection.hpp"
 
-SynthControlWidget::SynthControlWidget(Synth* synth, QWidget* parent)
+SynthControl::SynthControl(Synth* synth, QWidget* parent)
     : QWidget(parent), synth(synth) {
 
     QVBoxLayout* layout = new QVBoxLayout(this);

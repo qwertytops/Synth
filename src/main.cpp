@@ -20,10 +20,10 @@
 
 #include "UI/EmptySlot.hpp"
 
-#include "UI/Components/OscillatorControlWidget.hpp"
-#include "UI/Components/SynthControlWidget.hpp"
-#include "UI/Components/ADSRControlWidget.hpp"
-#include "UI/Components/BiquadFilterControlWidget.hpp"
+#include "UI/Components/OscillatorControl.hpp"
+#include "UI/Components/SynthControl.hpp"
+#include "UI/Components/ADSRControl.hpp"
+#include "UI/Components/BiquadFilterControl.hpp"
 
 #include "CoreAudioWaveMaker.hpp"
 #include "Synth.hpp"

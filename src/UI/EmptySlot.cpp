@@ -62,13 +62,13 @@ void EmptySlot::initialiseComponentMenu() {
                     osc->synth = synth;
                     synth->addComponent(osc);
                     osc->id = id++;
-                    QWidget* control = new OscillatorControlWidget(osc, this->size());
+                    QWidget* control = new OscillatorControl(osc, this->size());
                     replaceGridItem(control);
                 } else if (auto env = dynamic_cast<ADSR*>(comp)) {
                     env->synth = synth;
                     synth->addComponent(env);
                     env->id = id++;
-                    QWidget *control = new ADSRControlWidget(env, this->size());
+                    QWidget *control = new ADSRControl(env, this->size());
                     replaceGridItem(control);
                 }
             } else {

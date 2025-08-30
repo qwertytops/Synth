@@ -11,9 +11,9 @@
 
 #include "BiquadFilter.hpp"
 
-class BiquadFilterControlWidget : public QWidget {
+class BiquadFilterControl : public QWidget {
 public:
-    explicit BiquadFilterControlWidget(BiquadFilter* filter, QWidget* parent = nullptr);
+    explicit BiquadFilterControl(BiquadFilter* filter, QWidget* parent = nullptr);
 
 private:
     BiquadFilter* filter;
