@@ -5,9 +5,10 @@
 void Oscillator::run(double elapsed) {
     for (auto& pair : inputs.at(Inputs::MAIN)->pairs) {
         Note* note = pair.first;
-        double sample = getSample(elapsed, note);
+        double sample = getSample(elapsed, note);;
 
         for (auto& conn : outgoingConnections) {
+            // cout << id << " to " << conn->destination->parent->id << endl;
             conn->destination->pairs.push_back(make_pair(note, sample));
         }
     }

@@ -13,21 +13,15 @@ double Synth::MakeSound(double elapsed) {
         input->reset();
     }
 
-    // cout << "nbp: " << notesBeingPlayed.size() << endl;
-    // cout << "inputs count: " << inputs << endl;
-
-    // auto inputsList = getAllInputs();
-    // for (auto* in : inputsList) {
-    //     cout << "Input " << in->name << " pairs before reset: " << in->pairs.size() << endl;
-    // }
-    
     for (auto& note : notesBeingPlayed) {
         for (int i = 0; i < inputs; i++) {
-            components[i]->inputs.at(0)->pairs.push_back(make_pair(note, 0));
+            cout << processingOrder[i]->name << endl;
+            processingOrder[i]->inputs.at(0)->pairs.push_back(make_pair(note, 0));
         }
+        // cout << endl;
     }
-    for (auto& component : components) {
-        // cout << "running " << component->name << component->id << endl;
+    for (auto& component : processingOrder) {
+        // cout << "running " << component->name << endl;
         component->run(elapsed);
     }
 
@@ -42,8 +36,9 @@ double Synth::MakeSound(double elapsed) {
     for (auto& pair : mainOut->pairs) {
         Note* n = pair.first;
         double amplitude = pair.second;
+        
         if (n == nullptr) continue;
-        if (n->active) { // add something like || std::fabs(amplitude) > AMPLITUDE_THRESH
+        if (!n->finished) {
             if (seen.find(n) == seen.end()) {
                 seen.insert(n);
                 keptNotes.push_back(n);
@@ -57,6 +52,7 @@ double Synth::MakeSound(double elapsed) {
     //     cout << result << endl;
     // }
     mtx.unlock();
+    // cout << result << endl;
     return result * volume;
 }
 
@@ -64,7 +60,7 @@ Synth::Synth(int octave)
     : player([this](double elapsed) { return this->MakeSound(elapsed); })
 {
     mainOut = new Input("Main Out");
-    processingOrder = establishProcessingOrder();
+    establishProcessingOrder();
     player.Start();
     thread input([this, octave]() { this->ProcessInput(octave); });
     input.detach();
@@ -73,7 +69,7 @@ Synth::Synth(int octave)
 
 void Synth::addComponent(SynthComponent* comp) {
     components.push_back(comp);
-    processingOrder = establishProcessingOrder();
+    establishProcessingOrder();
 }
 
 vector<Input*> Synth::getAllInputs() {
@@ -116,51 +112,75 @@ void Synth::ProcessInput(int octave) {
     }
 }
 
-vector<SynthComponent*> Synth::establishProcessingOrder() {
-    vector<SynthComponent*> allNodes = components;
+void Synth::establishProcessingOrder() {
+    cout << endl << "EPA" << endl;
+    vector<SynthComponent *> allNodes = components;
     vector<SynthComponent*> noInputNodes = {};
-    vector<SynthComponent*> processingOrder = {};
+    vector<SynthComponent*> order = {};
 
     inputs = 0;
 
     for (int i = allNodes.size() - 1; i >= 0; i--) {
         SynthComponent* node = allNodes[i];
+        for (auto& conn : node->incomingConnections) {
+            conn->visited = false;
+        }
+        cout << "checking in conns of node " << node->name << " | " << node->incomingConnections.size() << endl;
         if (node->incomingConnections.size() == 0) {
             allNodes.erase(allNodes.begin() + i);
+            // cout << "NIN: " << node->name << node->id << endl;
             noInputNodes.push_back(node);
             inputs++;
         }
     }
+    // cout << "inputs: " << inputs << endl;
 
     while (noInputNodes.size() > 0) {
         SynthComponent* current = noInputNodes.at(0);
-        processingOrder.push_back(current);
+        cout << "current: " << current->name << endl;
+        cout << "adding to order" << endl;
+        order.push_back(current);
         noInputNodes.erase(noInputNodes.begin());
 
+        cout << "checking current's outgoing connections" << endl;
         for (auto& conn : current->outgoingConnections) {
+            cout << "visiting " << conn->destination->parent->name << endl;
             conn->visited = true;
             bool noIncoming = true;
 
             if (conn->destination->parent == nullptr) {
-                cout << "ignoring main out" << endl;
                 continue;
             }
 
             for (auto& conn1 : conn->destination->parent->incomingConnections) {
                 if (!conn1->visited) {
-                    noIncoming = false; // chatgpt said it should be false but it was true before
+                    cout << "destination has other inputs: " << conn->destination->parent->name << endl;
+                    noIncoming = false;
                     break;
                 }
             }
             if (noIncoming) {
                 SynthComponent* newNoInput = conn->destination->parent;
+                cout << "new node with no input: " << newNoInput->name << endl;
                 noInputNodes.push_back(newNoInput);
 
                 vector<SynthComponent*>::iterator position = find(allNodes.begin(), allNodes.end(), newNoInput);
+
+                cout << current->name << current->id << endl;
+                cout << conn->destination->name << endl;
+                cout << newNoInput->name << newNoInput->id << endl;
+
                 allNodes.erase(position);
             }
         }
+        cout << "noinputs size: " << noInputNodes.size() << endl;
     }
 
-    return processingOrder;
+    processingOrder = std::move(order);
+
+    cout << "\norder:\n";
+    
+    for (auto& c : processingOrder) {
+        cout << c->name << c->id << endl;
+    }
 }

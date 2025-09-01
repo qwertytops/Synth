@@ -7,6 +7,7 @@ public:
     double noteOn;
     double noteOff;
     double offAmplitude;
+    double finished;
 
     Note(int midiNum, double noteOn);
 };

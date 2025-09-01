@@ -4,4 +4,5 @@ Note::Note(int midiNum, double noteOn) {
     this->midiNum = midiNum;
     this->noteOn = noteOn;
     active = true;
+    finished = false;
 }

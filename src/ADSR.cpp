@@ -20,6 +20,8 @@ ADSR::ADSR(double a, double d, double s, double r) {
     name = "ADSR";
 }
 
+#include <iostream>
+
 void ADSR::run(double elapsed) {
     for (auto& pair : inputs.at(Inputs::MAIN)->pairs) {
         Note* note = pair.first;
@@ -50,18 +52,16 @@ double ADSR::getAmplitude(double elapsed, Note* note) {
     else {
         // R
         double timeSinceRelease = elapsed - note->noteOff;
-        if (release > 0) {
+        if (timeSinceRelease >= release) {
+            note->finished = true;
+            return 0;
+        }
+        if (release > 0) { // div by 0 guard may not be necessary after above block
             amplitude = note->offAmplitude * (1.0 - timeSinceRelease / release);
         } else {
             return 0;
         }
     }
-
-    if (amplitude <= 0.0001) {
-        amplitude = 0;
-    }
-
-    // cout << "env: " << amplitude << endl;
 
     return amplitude;
 }

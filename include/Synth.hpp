@@ -37,11 +37,11 @@ public:
 
     void addComponent(SynthComponent*);
     vector<Input*> getAllInputs();
+    void establishProcessingOrder();
 
 private:
     CoreAudioWaveMaker<float> player;
 
     int inputs = 0;
-    vector<SynthComponent*> establishProcessingOrder();
     vector<SynthComponent*> processingOrder;
 };

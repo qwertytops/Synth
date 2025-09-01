@@ -22,7 +22,12 @@ QMenu* Control::inputsMenu()
             connect(action, &QAction::triggered, this, [this, comp, i]() {
                 Input* selected = comp->inputs[i];
                 Connection* conn = new Connection(this->parentComponent, selected);
+
+                cout << "new connection from " << conn->source->name << conn->source->id << " to " << conn->destination->name << endl;
+
                 this->parentComponent->outgoingConnections.push_back(conn);
+                selected->parent->incomingConnections.push_back(conn);
+                this->parentComponent->synth->establishProcessingOrder();
             });
         }
     }
