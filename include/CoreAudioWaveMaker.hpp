@@ -10,7 +10,8 @@
 template<typename T>
 class CoreAudioWaveMaker {
 public:
-    using AudioFunction = std::function<double(double)>;
+    // changed AudioFunction: now fills an output buffer for a block
+    using AudioFunction = std::function<void(float*, UInt32)>;
 
     CoreAudioWaveMaker(AudioFunction userFunc, double sampleRate = 44100.0) 
         : m_userFunc(userFunc), m_sampleRate(sampleRate), m_globalTime(0.0) {}
@@ -44,7 +45,7 @@ public:
                              &streamDesc,
                              sizeof(streamDesc));
 
-        // Set render callback
+        // Set render callback (unchanged)
         AURenderCallbackStruct callback = {};
         callback.inputProc = &RenderStatic;
         callback.inputProcRefCon = this;
@@ -84,13 +85,15 @@ private:
     OSStatus Render(AudioBufferList* ioData, UInt32 inNumberFrames) {
         float* buffer = reinterpret_cast<float*>(ioData->mBuffers[0].mData);
 
-        for (UInt32 i = 0; i < inNumberFrames; i++) {
-            double sample = m_userFunc ? m_userFunc(m_globalTime) : 0.0;
-            sample = std::clamp(sample, -1.0, 1.0);
-            buffer[i] = static_cast<float>(sample);
-            m_globalTime += 1.0 / m_sampleRate;
+        // call user-provided block function once for the whole buffer
+        if (m_userFunc) {
+            m_userFunc(buffer, inNumberFrames);
+        } else {
+            for (UInt32 i = 0; i < inNumberFrames; i++) buffer[i] = 0.0f;
         }
 
+        // advance global time by frames
+        m_globalTime += (double)inNumberFrames / m_sampleRate;
         return noErr;
     }
 

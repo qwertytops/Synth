@@ -31,12 +31,21 @@ public:
     double MakeSound(double elapsed);
     void ProcessInput(int octave);
 
+    // New: block render API used by audio device
+    void RenderAudioBlock(float* outBuffer, UInt32 frames);
+
+    // Internal: non-locking version of MakeSound used when caller holds lock
+    double MakeSoundLocked(double elapsed);
+
     Input* mainOut;
 
     Synth(int octave);
 
     void addComponent(SynthComponent*);
-    vector<Input*> getAllInputs();
+
+    vector<Input*> allInputs;
+    void getAllInputs();
+
     void establishProcessingOrder();
 
 private:

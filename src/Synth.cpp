@@ -5,17 +5,18 @@
 #include <iostream>
 #include <unordered_set>
 #include <cmath>
+#include <algorithm> // for clamp
 
 double Synth::MakeSound(double elapsed) {
     mtx.lock();
 
-    for (auto& input : getAllInputs()) {
+    for (auto& input : allInputs) {
         input->reset();
     }
 
     for (auto& note : notesBeingPlayed) {
         for (int i = 0; i < inputs; i++) {
-            cout << processingOrder[i]->name << endl;
+            // cout << processingOrder[i]->name << endl;
             processingOrder[i]->inputs.at(0)->pairs.push_back(make_pair(note, 0));
         }
         // cout << endl;
@@ -57,7 +58,7 @@ double Synth::MakeSound(double elapsed) {
 }
 
 Synth::Synth(int octave)
-    : player([this](double elapsed) { return this->MakeSound(elapsed); })
+    : player([this](float* buffer, UInt32 frames) { this->RenderAudioBlock(buffer, frames); }) // changed signature
 {
     mainOut = new Input("Main Out");
     establishProcessingOrder();
@@ -70,9 +71,10 @@ Synth::Synth(int octave)
 void Synth::addComponent(SynthComponent* comp) {
     components.push_back(comp);
     establishProcessingOrder();
+    getAllInputs();
 }
 
-vector<Input*> Synth::getAllInputs() {
+void Synth::getAllInputs() {
     vector<Input*> result = {};
 
     result.push_back(mainOut);
@@ -83,7 +85,7 @@ vector<Input*> Synth::getAllInputs() {
         }
     }
 
-    return result;
+    allInputs = result;
 }
 
 void Synth::ProcessInput(int octave) {
@@ -113,7 +115,7 @@ void Synth::ProcessInput(int octave) {
 }
 
 void Synth::establishProcessingOrder() {
-    cout << endl << "EPA" << endl;
+    // cout << endl << "EPA" << endl;
     vector<SynthComponent *> allNodes = components;
     vector<SynthComponent*> noInputNodes = {};
     vector<SynthComponent*> order = {};
@@ -125,7 +127,6 @@ void Synth::establishProcessingOrder() {
         for (auto& conn : node->incomingConnections) {
             conn->visited = false;
         }
-        cout << "checking in conns of node " << node->name << " | " << node->incomingConnections.size() << endl;
         if (node->incomingConnections.size() == 0) {
             allNodes.erase(allNodes.begin() + i);
             // cout << "NIN: " << node->name << node->id << endl;
@@ -137,14 +138,10 @@ void Synth::establishProcessingOrder() {
 
     while (noInputNodes.size() > 0) {
         SynthComponent* current = noInputNodes.at(0);
-        cout << "current: " << current->name << endl;
-        cout << "adding to order" << endl;
         order.push_back(current);
         noInputNodes.erase(noInputNodes.begin());
 
-        cout << "checking current's outgoing connections" << endl;
         for (auto& conn : current->outgoingConnections) {
-            cout << "visiting " << conn->destination->parent->name << endl;
             conn->visited = true;
             bool noIncoming = true;
 
@@ -152,28 +149,22 @@ void Synth::establishProcessingOrder() {
                 continue;
             }
 
+
             for (auto& conn1 : conn->destination->parent->incomingConnections) {
                 if (!conn1->visited) {
-                    cout << "destination has other inputs: " << conn->destination->parent->name << endl;
                     noIncoming = false;
                     break;
                 }
             }
             if (noIncoming) {
                 SynthComponent* newNoInput = conn->destination->parent;
-                cout << "new node with no input: " << newNoInput->name << endl;
                 noInputNodes.push_back(newNoInput);
 
                 vector<SynthComponent*>::iterator position = find(allNodes.begin(), allNodes.end(), newNoInput);
 
-                cout << current->name << current->id << endl;
-                cout << conn->destination->name << endl;
-                cout << newNoInput->name << newNoInput->id << endl;
-
                 allNodes.erase(position);
             }
         }
-        cout << "noinputs size: " << noInputNodes.size() << endl;
     }
 
     processingOrder = std::move(order);
@@ -183,4 +174,57 @@ void Synth::establishProcessingOrder() {
     for (auto& c : processingOrder) {
         cout << c->name << c->id << endl;
     }
+}
+
+void Synth::RenderAudioBlock(float* outBuffer, UInt32 frames) {
+    // Lock once for the whole block to avoid per-sample mutex overhead
+    mtx.lock();
+    for (UInt32 i = 0; i < frames; ++i) {
+        // compute sample time for this frame
+        double t = player.GetTime() + (double)i / 44100.0; // approximate; player will advance after block
+        double s = MakeSoundLocked(t);
+        // clamp and write
+        outBuffer[i] = static_cast<float>(std::clamp(s, -1.0, 1.0));
+    }
+    mtx.unlock();
+}
+
+double Synth::MakeSoundLocked(double elapsed) {
+    // Reset all inputs (reuse existing Input objects)
+    for (auto& input : allInputs) {
+        input->pairs.clear(); // keep capacity to avoid realloc
+    }
+
+    // Push active notes into input nodes (use processingOrder[0..inputs-1])
+    for (auto* note : notesBeingPlayed) {
+        for (int i = 0; i < inputs && i < (int)processingOrder.size(); ++i) {
+            processingOrder[i]->inputs.at(0)->pairs.push_back(std::make_pair(note, 0.0));
+        }
+    }
+
+    // Run components in processing order
+    for (auto& component : processingOrder) {
+        component->run(elapsed); // crashes?
+    }
+
+    // Accumulate result and rebuild notesBeingPlayed (deduplicate)
+    double result = 0.0;
+    const double AMPLITUDE_THRESH = 0.0001;
+    std::unordered_set<Note*> seen;
+    vector<Note*> keptNotes;
+    keptNotes.reserve(notesBeingPlayed.size());
+
+    for (auto& pair : mainOut->pairs) {
+        Note* n = pair.first;
+        double amplitude = pair.second;
+        if (n == nullptr) continue;
+        if (!n->finished || std::fabs(amplitude) > AMPLITUDE_THRESH) {
+            if (seen.insert(n).second) {
+                keptNotes.push_back(n);
+            }
+        }
+        result += amplitude;
+    }
+    notesBeingPlayed = std::move(keptNotes);
+    return result * volume;
 }
