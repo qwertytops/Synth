@@ -10,6 +10,7 @@
 
 #include "UI/Components/OscillatorControl.hpp"
 #include "UI/Components/ADSRControl.hpp"
+#include "UI/Components/BiquadFilterControl.hpp"
 
 #include "SynthComponentFactory.hpp"
 #include "Synth.hpp"

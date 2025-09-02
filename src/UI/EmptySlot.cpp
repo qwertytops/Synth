@@ -70,6 +70,12 @@ void EmptySlot::initialiseComponentMenu() {
                     env->id = id++;
                     QWidget *control = new ADSRControl(env, this->size());
                     replaceGridItem(control);
+                } else if (auto filter = dynamic_cast<BiquadFilter*>(comp)) {
+                    filter->synth = synth;
+                    synth->addComponent(filter);
+                    filter->id = id++;
+                    QWidget *control = new BiquadFilterControl(filter, this->size());
+                    replaceGridItem(control);
                 }
             } else {
                 qWarning("Class '%s' not found in registry", qPrintable(className));

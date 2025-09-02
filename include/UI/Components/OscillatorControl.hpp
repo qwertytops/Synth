@@ -15,8 +15,6 @@
 #include "UI/Control.hpp"
 
 class OscillatorControl : public Control {
-    // Q_OBJECT
-
 public:
     explicit OscillatorControl(Oscillator *oscillator, QSize bounds);
 

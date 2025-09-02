@@ -6,14 +6,17 @@
 #include <QBoxLayout>
 #include <QComboBox>
 #include <QPushButton>
+#include <QSize>
 
-#include "CustomUI/DragOnlyDial.hpp"
+// #include "CustomUI/DragOnlyDial.hpp"
+#include <QDial>
 
 #include "BiquadFilter.hpp"
+#include "UI/Control.hpp"
 
-class BiquadFilterControl : public QWidget {
+class BiquadFilterControl : public Control {
 public:
-    explicit BiquadFilterControl(BiquadFilter* filter, QWidget* parent = nullptr);
+    explicit BiquadFilterControl(BiquadFilter* filter, QSize bounds);
 
 private:
     BiquadFilter* filter;

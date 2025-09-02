@@ -17,6 +17,7 @@ public:
         : mode(mode), sampleRate(44100), frequency(frequency), Q(Q), gainDB(gainDB)
     {
         calculateCoefficients();
+        // this is out of date but also out of use rn
     }
 
     void run(double elapsed);

@@ -7,6 +7,7 @@
 #include <cmath>
 #include <algorithm> // for clamp
 
+// UNSUSED BUT KEEPING FOR A BIT JUST IN CASE
 double Synth::MakeSound(double elapsed) {
     mtx.lock();
 
