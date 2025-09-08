@@ -7,7 +7,7 @@
 #include "Note.hpp"
 
 using namespace std;
-class Input;
+class NoteInput;
 class Connection;
 class Synth;
 
@@ -15,12 +15,12 @@ class SynthComponent {
 public:
     string name;
     int id;
-    vector<Input*> inputs = {};
+    vector<NoteInput*> inputs = {};
     vector<Connection*> incomingConnections = {};
     vector<Connection*> outgoingConnections = {};
     virtual void run(double elapsed) = 0;
 
     Synth* synth;
 protected:
-    vector<Input*> destinations = {};
+    vector<NoteInput*> destinations = {};
 };

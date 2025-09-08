@@ -1,5 +1,5 @@
 #include "UI/Components/OscillatorControl.hpp"
-#include "Input.hpp"
+#include "NoteInput.hpp"
 #include "Connection.hpp"
 
 OscillatorControl::OscillatorControl(Oscillator* oscillator, QSize bounds)

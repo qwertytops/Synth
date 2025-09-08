@@ -1,5 +1,5 @@
 #include "Synth.hpp"
-#include "Input.hpp"
+#include "NoteInput.hpp"
 #include "Connection.hpp"
 
 #include <iostream>
@@ -18,7 +18,7 @@ double Synth::MakeSound(double elapsed) {
     for (auto& note : notesBeingPlayed) {
         for (int i = 0; i < inputs; i++) {
             // cout << processingOrder[i]->name << endl;
-            processingOrder[i]->inputs.at(0)->pairs.push_back(make_pair(note, 0));
+            processingOrder[i]->inputs.at(0)->add(make_pair(note, 0));
         }
         // cout << endl;
     }
@@ -61,7 +61,7 @@ double Synth::MakeSound(double elapsed) {
 Synth::Synth(int octave)
     : player([this](float* buffer, UInt32 frames) { this->RenderAudioBlock(buffer, frames); }) // changed signature
 {
-    mainOut = new Input("Main Out");
+    mainOut = new NoteInput("Main Out");
     establishProcessingOrder();
     player.Start();
     thread input([this, octave]() { this->ProcessInput(octave); });
@@ -76,7 +76,7 @@ void Synth::addComponent(SynthComponent* comp) {
 }
 
 void Synth::getAllInputs() {
-    vector<Input*> result = {};
+    vector<NoteInput*> result = {};
 
     result.push_back(mainOut);
 
@@ -170,11 +170,11 @@ void Synth::establishProcessingOrder() {
 
     processingOrder = std::move(order);
 
-    cout << "\norder:\n";
+    // cout << "\norder:\n";
     
-    for (auto& c : processingOrder) {
-        cout << c->name << c->id << endl;
-    }
+    // for (auto& c : processingOrder) {
+    //     cout << c->name << c->id << endl;
+    // }
 }
 
 void Synth::RenderAudioBlock(float* outBuffer, UInt32 frames) {
@@ -191,15 +191,15 @@ void Synth::RenderAudioBlock(float* outBuffer, UInt32 frames) {
 }
 
 double Synth::MakeSoundLocked(double elapsed) {
-    // Reset all inputs (reuse existing Input objects)
+    // Reset all inputs (reuse existing NoteInput objects)
     for (auto& input : allInputs) {
-        input->pairs.clear(); // keep capacity to avoid realloc
+        input->reset();
     }
 
     // Push active notes into input nodes (use processingOrder[0..inputs-1])
     for (auto* note : notesBeingPlayed) {
         for (int i = 0; i < inputs && i < (int)processingOrder.size(); ++i) {
-            processingOrder[i]->inputs.at(0)->pairs.push_back(std::make_pair(note, 0.0));
+            processingOrder[i]->inputs.at(0)->add(std::make_pair(note, 0.0));
         }
     }
 

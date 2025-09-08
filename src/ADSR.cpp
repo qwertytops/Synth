@@ -1,5 +1,5 @@
 #include "ADSR.hpp"
-#include "Input.hpp"
+#include "NoteInput.hpp"
 #include "Connection.hpp"
 
 ADSR::ADSR() {
@@ -23,13 +23,15 @@ ADSR::ADSR(double a, double d, double s, double r) {
 #include <iostream>
 
 void ADSR::run(double elapsed) {
-    for (auto& pair : inputs.at(Inputs::MAIN)->pairs) {
+    NoteInput* mainInput = inputs.at(Inputs::MAIN);
+    for (int i = 0; i < mainInput->endIndex; i++) {
+        auto &pair = mainInput->pairs.at(i);
         Note* note = pair.first;
         double value = pair.second;
 
         value *= getAmplitude(elapsed, note);
         for (auto& conn : outgoingConnections) {
-            conn->destination->pairs.push_back(make_pair(note, value));
+            conn->destination->add(make_pair(note, value));
         }
     }
 }
@@ -67,5 +69,5 @@ double ADSR::getAmplitude(double elapsed, Note* note) {
 }
 
 void ADSR::initialiseInputs() {
-    inputs.push_back(new Input("Main", this));
+    inputs.push_back(new NoteInput("Main", this));
 }

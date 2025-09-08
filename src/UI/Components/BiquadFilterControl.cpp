@@ -1,5 +1,5 @@
 #include "UI/Components/BiquadFilterControl.hpp"
-#include "Input.hpp"
+#include "NoteInput.hpp"
 #include "Connection.hpp"
 
 BiquadFilterControl::BiquadFilterControl(BiquadFilter* filter, QSize bounds)
@@ -34,7 +34,7 @@ BiquadFilterControl::BiquadFilterControl(BiquadFilter* filter, QSize bounds)
     QLabel* freqLabel = new QLabel(QString("Frequency: %1 Hz").arg(filter->getFrequency()));
     // DragOnlyDial* freqDial = new DragOnlyDial;
     QDial* freqDial = new QDial;
-    freqDial->setMinimum(0);
+    freqDial->setMinimum(20);
     freqDial->setMaximum(20000);
     freqDial->setValue(filter->getFrequency());
 

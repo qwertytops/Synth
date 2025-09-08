@@ -74,7 +74,13 @@ void EmptySlot::initialiseComponentMenu() {
                     filter->synth = synth;
                     synth->addComponent(filter);
                     filter->id = id++;
-                    QWidget *control = new BiquadFilterControl(filter, this->size());
+                    QWidget* control = new BiquadFilterControl(filter, this->size());
+                    replaceGridItem(control);
+                } else if (auto mixer = dynamic_cast<Mixer*>(comp)) {
+                    mixer->synth = synth;
+                    synth->addComponent(mixer);
+                    mixer->id = id++;
+                    QWidget* control = new MixerControl(mixer, this->size());
                     replaceGridItem(control);
                 }
             } else {

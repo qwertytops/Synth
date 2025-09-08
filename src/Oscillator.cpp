@@ -1,15 +1,16 @@
 #include "Oscillator.hpp"
-#include "Input.hpp"
+#include "NoteInput.hpp"
 #include "Connection.hpp"
 
 void Oscillator::run(double elapsed) {
-    for (auto& pair : inputs.at(Inputs::MAIN)->pairs) {
+    NoteInput *mainInput = inputs.at(Inputs::MAIN);
+    for (int i = 0; i < mainInput->endIndex; i++) {
+        auto& pair = mainInput->pairs.at(i);
         Note* note = pair.first;
         double sample = getSample(elapsed, note);;
 
         for (auto& conn : outgoingConnections) {
-            // cout << id << " to " << conn->destination->parent->id << endl;
-            conn->destination->pairs.push_back(make_pair(note, sample));
+            conn->destination->add(make_pair(note, sample));
         }
     }
 }
@@ -105,9 +106,9 @@ double Oscillator::HZtoAV(double hz) {
 }
 
 void Oscillator::initialiseInputs() {
-    inputs.push_back(new Input("Main", this));
-    inputs.push_back(new Input("Frequency", this));
-    inputs.push_back(new Input("Amplitude", this));
-    inputs.push_back(new Input("Pulse Width", this));
-    inputs.push_back(new Input("Sync", this));
+    inputs.push_back(new NoteInput("Main", this));
+    inputs.push_back(new NoteInput("Frequency", this));
+    inputs.push_back(new NoteInput("Amplitude", this));
+    inputs.push_back(new NoteInput("Pulse Width", this));
+    inputs.push_back(new NoteInput("Sync", this));
 }

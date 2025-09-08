@@ -11,6 +11,7 @@
 #include "UI/Components/OscillatorControl.hpp"
 #include "UI/Components/ADSRControl.hpp"
 #include "UI/Components/BiquadFilterControl.hpp"
+#include "UI/Components/MixerControl.hpp"
 
 #include "SynthComponentFactory.hpp"
 #include "Synth.hpp"

@@ -12,7 +12,7 @@
 #include "ADSR.hpp"
 #include "BiquadFilter.hpp"
 #include "Note.hpp"
-#include "Input.hpp"
+#include "NoteInput.hpp"
 #include "SynthComponent.hpp"
 
 using namespace std;
@@ -37,13 +37,13 @@ public:
     // Internal: non-locking version of MakeSound used when caller holds lock
     double MakeSoundLocked(double elapsed);
 
-    Input* mainOut;
+    NoteInput* mainOut;
 
     Synth(int octave);
 
     void addComponent(SynthComponent*);
 
-    vector<Input*> allInputs;
+    vector<NoteInput*> allInputs;
     void getAllInputs();
 
     void establishProcessingOrder();

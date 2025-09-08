@@ -1,6 +1,6 @@
---Component--
-The synth is made up of components
-Each component has a vector of inputs and destinations
-- Inputs: available destinations for other components
-- Destinations: where the output of the component goes
-
+--INPUTS--
+-Note inputs-
+take a Note,value pair
+for preserving polyphony
+-Signal inputs-
+take just a value

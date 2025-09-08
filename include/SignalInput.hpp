@@ -8,18 +8,22 @@
 
 using namespace std;
 
-class Input {
+class SignalInput {
 public:
-    vector<pair<Note*, double>> pairs = {};
+    double value;
 
     string name;
     SynthComponent* parent;
 
-    void reset() {
-        pairs.clear();
+    void add(double val) {
+        value += val;
     }
 
-    Input(string name, SynthComponent* parent = nullptr)
+    void reset() {
+        value = 0;
+    }
+
+    SignalInput(string name, SynthComponent* parent = nullptr)
         : name(name), parent(parent) {}
 
 private:

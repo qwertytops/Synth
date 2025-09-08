@@ -1,5 +1,5 @@
 #include "BiquadFilter.hpp"
-#include "Input.hpp"
+#include "NoteInput.hpp"
 #include "Connection.hpp"
 
 // #include <iostream>
@@ -18,13 +18,15 @@ BiquadFilter::BiquadFilter() {
 
 void BiquadFilter::run(double elapsed)
 {
-    for (auto& pair : inputs.at(Inputs::MAIN)->pairs) {
-        Note* note = pair.first;
+    NoteInput* mainInput = inputs.at(Inputs::MAIN);
+    for (int i = 0; i < mainInput->endIndex; i++) {
+        auto &pair = mainInput->pairs.at(i);
+        Note *note = pair.first;
         double value = pair.second;
 
         value = applyFilter(value);
         for (auto& conn : outgoingConnections) {
-            conn->destination->pairs.push_back(make_pair(note, value));
+            conn->destination->add(make_pair(note, value));
         }
     }
 }
@@ -181,8 +183,8 @@ void BiquadFilter::calculateCoefficients() {
 }
 
 void BiquadFilter::initialiseInputs() {
-    inputs.push_back(new Input("Main", this));
-    inputs.push_back(new Input("Frequency", this));
-    inputs.push_back(new Input("Quality", this));
-    inputs.push_back(new Input("Gain", this));  
+    inputs.push_back(new NoteInput("Main", this));
+    inputs.push_back(new NoteInput("Frequency", this));
+    inputs.push_back(new NoteInput("Quality", this));
+    inputs.push_back(new NoteInput("Gain", this));  
 }

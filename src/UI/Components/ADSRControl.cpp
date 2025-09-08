@@ -1,5 +1,5 @@
 #include "UI/Components/ADSRControl.hpp"
-#include "Input.hpp"
+#include "NoteInput.hpp"
 #include "Connection.hpp"
 
 ADSRControl::ADSRControl(ADSR* adsr, QSize bounds)
@@ -15,7 +15,7 @@ ADSRControl::ADSRControl(ADSR* adsr, QSize bounds)
     // Attack
     QVBoxLayout* attackLayout = new QVBoxLayout;
     QSlider* attackSlider = new QSlider(Qt::Vertical);
-    QLabel* attackLabel = new QLabel(QString("%1 ms").arg(adsr->attack * 1000));
+    QLabel* attackLabel = new QLabel(QString("%1 ms").arg(adsr->attack * 1000)); // crash here once for some reason
 
     attackLabel->setMinimumWidth(60);
     attackSlider->setMinimumWidth(60);
