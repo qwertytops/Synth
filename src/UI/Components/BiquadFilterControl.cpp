@@ -101,10 +101,10 @@ BiquadFilterControl::BiquadFilterControl(BiquadFilter* filter, QSize bounds)
     controlsLayout->addLayout(gainLayout);
     controlsLayout->addLayout(modeLayout);
 
-    QPushButton* button = new QPushButton("Output: --", this);
+    QPushButton* button = new QPushButton("Connect", this);
 
     connect(button, &QPushButton::clicked, this, [this]() {
-        QMenu* menu = inputsMenu();
+        QMenu* menu = availableInputsMenu();
 
         menu->exec(QCursor::pos());
     });

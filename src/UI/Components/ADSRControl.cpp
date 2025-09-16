@@ -90,10 +90,10 @@ ADSRControl::ADSRControl(ADSR* adsr, QSize bounds)
 
     layout->addLayout(slidersLayout);
 
-    QPushButton* button = new QPushButton("Output: --", this);
+    QPushButton* button = new QPushButton("Connect", this);
 
     connect(button, &QPushButton::clicked, this, [this]() {
-        QMenu* menu = inputsMenu();
+        QMenu* menu = availableInputsMenu();
 
         menu->exec(QCursor::pos());
     });

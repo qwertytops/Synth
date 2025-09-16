@@ -39,6 +39,12 @@ add_custom_target( run
     WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}  # where to run
     COMMENT "Building and launching Synth…"              # (optional)
 )
+add_custom_target(debug
+    COMMAND lldb ./synth
+    DEPENDS synth
+    WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+    COMMENT "Launching Synth under LLDB…"
+)
 
 # Set platform-specific output paths
 if(APPLE)

@@ -6,6 +6,7 @@
 #include <unordered_set>
 #include <cmath>
 #include <algorithm> // for clamp
+#include <cassert>
 
 // UNSUSED BUT KEEPING FOR A BIT JUST IN CASE
 double Synth::MakeSound(double elapsed) {
@@ -59,8 +60,13 @@ double Synth::MakeSound(double elapsed) {
 }
 
 Synth::Synth(int octave)
-    : player([this](float* buffer, UInt32 frames) { this->RenderAudioBlock(buffer, frames); }) // changed signature
+    : player([this](float* buffer, UInt32 frames) { this->RenderAudioBlock(buffer, frames); })
 {
+    // initialize lock-free ring buffer
+    assert((EVENT_CAP & (EVENT_CAP - 1)) == 0); // must be power of two
+    eventBuffer.resize(EVENT_CAP);
+    evMask = EVENT_CAP - 1;
+
     mainOut = new NoteInput("Main Out");
     establishProcessingOrder();
     player.Start();
@@ -89,28 +95,55 @@ void Synth::getAllInputs() {
     allInputs = result;
 }
 
+bool Synth::pushEvent(const Event& e) {
+    size_t tail = evTail.load(std::memory_order_relaxed);
+    size_t next = (tail + 1) & evMask;
+    size_t head = evHead.load(std::memory_order_acquire);
+    if (next == head) {
+        // full — drop the event to remain non-blocking
+        return false;
+    }
+    eventBuffer[tail] = e;
+    evTail.store(next, std::memory_order_release);
+    return true;
+}
+
+bool Synth::popEvent(Event& out) {
+    size_t head = evHead.load(std::memory_order_relaxed);
+    size_t tail = evTail.load(std::memory_order_acquire);
+    if (head == tail) {
+        return false; // empty
+    }
+    out = eventBuffer[head];
+    evHead.store((head + 1) & evMask, std::memory_order_release);
+    return true;
+}
+
 void Synth::ProcessInput(int octave) {
-    bool prevKeys[18] = {false};
-    bool held[18] = {false};
+    bool prevKeysLocal[18] = {false};
 
     while (true) {
-        mtx.lock();
         for (int k = 0; k < 18; k++) {
-            if (keys[k] && !prevKeys[k]) {
-                Note* n = new Note(k + 8*octave, player.GetTime()); // check memory leaks
-                notesBeingPlayed.push_back(n);
-            } else if (!keys[k] && prevKeys[k]) {
-                for (auto& note : notesBeingPlayed) {
-                    if (note->midiNum == k + 8*octave && note->active) {
-                        note->noteOff = player.GetTime();
-                        note->active = false;
-                        break;
-                    }
-                }
+            bool current = Synth::keys[k].load(std::memory_order_relaxed); // read atomic
+
+            if (current && !prevKeysLocal[k]) {
+                // key pressed: push NOTE_ON event (no mutex, no allocation)
+                Event e;
+                e.type = Event::NOTE_ON;
+                e.midi = static_cast<uint8_t>(k + 8*octave);
+                e.time = player.GetTime();
+                pushEvent(e);
+            } else if (!current && prevKeysLocal[k]) {
+                // key released: push NOTE_OFF event
+                Event e;
+                e.type = Event::NOTE_OFF;
+                e.midi = static_cast<uint8_t>(k + 8*octave);
+                e.time = player.GetTime();
+                pushEvent(e);
             }
-            prevKeys[k] = keys[k];
+
+            prevKeysLocal[k] = current;
         }
-        mtx.unlock();
         this_thread::sleep_for(chrono::milliseconds(10));
     }
 }
@@ -178,16 +211,30 @@ void Synth::establishProcessingOrder() {
 }
 
 void Synth::RenderAudioBlock(float* outBuffer, UInt32 frames) {
-    // Lock once for the whole block to avoid per-sample mutex overhead
-    mtx.lock();
+    // Pop and apply all pending events once per block (audio-thread, non-blocking)
+    Event ev;
+    while (popEvent(ev)) {
+        if (ev.type == Event::NOTE_ON) {
+            Note* n = new Note(static_cast<int>(ev.midi), ev.time);
+            notesBeingPlayed.push_back(n);
+        } else if (ev.type == Event::NOTE_OFF) {
+            // mark matching active note off
+            for (auto& note : notesBeingPlayed) {
+                if (note->midiNum == ev.midi && note->active) {
+                    note->noteOff = ev.time;
+                    note->active = false;
+                    break;
+                }
+            }
+        }
+    }
+
+    // Process block without taking mtx (audio thread must not block)
     for (UInt32 i = 0; i < frames; ++i) {
-        // compute sample time for this frame
-        double t = player.GetTime() + (double)i / 44100.0; // approximate; player will advance after block
+        double t = player.GetTime() + (double)i / 44100.0;
         double s = MakeSoundLocked(t);
-        // clamp and write
         outBuffer[i] = static_cast<float>(std::clamp(s, -1.0, 1.0));
     }
-    mtx.unlock();
 }
 
 double Synth::MakeSoundLocked(double elapsed) {
@@ -205,7 +252,7 @@ double Synth::MakeSoundLocked(double elapsed) {
 
     // Run components in processing order
     for (auto& component : processingOrder) {
-        component->run(elapsed); // crashes?
+        component->run(elapsed);
     }
 
     // Accumulate result and rebuild notesBeingPlayed (deduplicate)

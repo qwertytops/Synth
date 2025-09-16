@@ -6,6 +6,8 @@ Mixer::Mixer() {
     for (int i = 0; i < NUM_INPUTS; i++) {
         inLevels[i] = 0.25;
     }
+    initialiseInputs();
+    name = "Mixer";
 }
 
 void Mixer::run(double elapsed) {

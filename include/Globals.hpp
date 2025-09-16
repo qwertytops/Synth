@@ -1,1 +1,1 @@
-#define POLYPHONY 8
+#define POLYPHONY 16

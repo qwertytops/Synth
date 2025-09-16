@@ -44,11 +44,10 @@ bool isKeyPressed(CGKeyCode keycode) {
 
 void ProcessInput() {
     while (true) {
-        synth.mtx.lock();
         for (int k = 0; k < 18; k++) {
-            synth.keys[k] = isKeyPressed(keyCodes[k]);
+            // write atomic without taking synth.mtx
+            synth.keys[k].store(isKeyPressed(keyCodes[k]), std::memory_order_relaxed);
         }
-        synth.mtx.unlock();
         this_thread::sleep_for(chrono::milliseconds(10));
     }
 }

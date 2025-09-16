@@ -12,5 +12,6 @@ class Control : public QWidget {
 public:
     SynthComponent* parentComponent;
 protected:
-    QMenu* inputsMenu();
+    QMenu* availableInputsMenu();
+    QMenu* existingConnectionsMenu(SynthComponent* component);
 };

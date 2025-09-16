@@ -92,13 +92,21 @@ OscillatorControl::OscillatorControl(Oscillator* oscillator, QSize bounds)
         detuneLabel->setText(QString("Detune: %1 c").arg(value));
     });
 
-    QPushButton* button = new QPushButton("Output: --", this);
+    QHBoxLayout* connectionsLayout = new QHBoxLayout;
 
-    connect(button, &QPushButton::clicked, this, [this]() {
-        QMenu* menu = inputsMenu();
-
+    QPushButton* connectButton = new QPushButton("Connect", this);
+    connect(connectButton, &QPushButton::clicked, this, [this]() {
+        QMenu* menu = availableInputsMenu();
         menu->exec(QCursor::pos());
     });
 
-    layout->addWidget(button);
+    QPushButton* deleteConnectionButton = new QPushButton("Bin icon", this);
+    connect(deleteConnectionButton, &QPushButton::clicked, this, [this]() {
+        QMenu* menu = existingConnectionsMenu(this->oscillator);
+        menu->exec(QCursor::pos());
+    });
+
+    connectionsLayout->addWidget(connectButton);
+
+    layout->addLayout(connectionsLayout);
 }
