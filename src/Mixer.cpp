@@ -1,5 +1,5 @@
 #include "Mixer.hpp"
-#include "NoteInput.hpp"
+#include "Input.hpp"
 #include "Connection.hpp"
 
 Mixer::Mixer() {
@@ -12,22 +12,22 @@ Mixer::Mixer() {
 
 void Mixer::run(double elapsed) {
     for (int i = 0; i < NUM_INPUTS; i++) {
-        NoteInput* currentInput = inputs.at(i);
+        Input* currentInput = inputs.at(i);
         for (int i = 0; i < currentInput->endIndex; i++) {
             auto& pair = currentInput->pairs.at(i);
-            Note* note = pair.first;
+            int voice = pair.first;
             double sample = pair.second * inLevels[i];
 
             for (auto& conn : outgoingConnections) {
-                conn->destination->add(make_pair(note, sample));
+                conn->destination->add(make_pair(voice, sample));
             }
         }
     }
 }
 
 void Mixer::initialiseInputs() {
-    inputs.push_back(new NoteInput("IN1", this));
-    inputs.push_back(new NoteInput("IN2", this));
-    inputs.push_back(new NoteInput("IN3", this));
-    inputs.push_back(new NoteInput("IN4", this));
+    inputs.push_back(new Input("IN1", this));
+    inputs.push_back(new Input("IN2", this));
+    inputs.push_back(new Input("IN3", this));
+    inputs.push_back(new Input("IN4", this));
 }

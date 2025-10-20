@@ -19,6 +19,8 @@ set(CMAKE_PREFIX_PATH "/opt/homebrew/opt/qt/lib/cmake")
 
 # QT: Find required modules
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
+find_package(Boost REQUIRED)
+include_directories(${Boost_INCLUDE_DIRS})
 
 # Add executable
 add_executable(synth ${SOURCES})

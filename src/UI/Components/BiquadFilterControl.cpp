@@ -1,5 +1,5 @@
 #include "UI/Components/BiquadFilterControl.hpp"
-#include "NoteInput.hpp"
+#include "Input.hpp"
 #include "Connection.hpp"
 
 BiquadFilterControl::BiquadFilterControl(BiquadFilter* filter, QSize bounds)

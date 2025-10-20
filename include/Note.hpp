@@ -2,12 +2,13 @@
 
 class Note {
 public:
+    int voice;
     int midiNum;
-    bool active;
     double noteOn;
     double noteOff;
     double offAmplitude;
-    double finished;
+    bool finished;
+    bool active;
 
     Note(int midiNum, double noteOn);
 };

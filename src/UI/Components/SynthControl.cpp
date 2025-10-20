@@ -1,5 +1,5 @@
 #include "UI/Components/SynthControl.hpp"
-#include "NoteInput.hpp"
+#include "Input.hpp"
 #include "Connection.hpp"
 
 SynthControl::SynthControl(Synth* synth, QWidget* parent)

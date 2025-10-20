@@ -2,11 +2,17 @@
 
 #include <utility>
 
-#include "Note.hpp"
+#include "Globals.hpp"
 #include "Synth.hpp"
 #include "SynthComponentFactory.hpp"
 
 using namespace std;
+
+struct NoteInfo {
+    double noteOn;
+    double noteOff;
+    double releaseLevel;
+};
 
 class ADSR : public SynthComponent {
 public:
@@ -21,11 +27,13 @@ public:
     void run(double elapsed);
 
 private:
-    double getAmplitude(double elapsed, Note* note);
+    double getAmplitude(double elapsed, NoteInfo note);
     enum Inputs {
         MAIN
     };
     void initialiseInputs();
+
+    array<NoteInfo, POLYPHONY + 1> activeVoices{};
 };
 
 REGISTER_COMPONENT(ADSR);

@@ -2,6 +2,7 @@
 #include <cmath>
 #include <utility>
 
+#include "Globals.hpp"
 #include "Synth.hpp"
 #include "SynthComponentFactory.hpp"
 #include "WaveType.hpp"
@@ -16,7 +17,6 @@ public:
     int detune;
 
     void run(double elapsed);
-    
 
     Oscillator();
     Oscillator(WaveType w, int octave);
@@ -30,7 +30,7 @@ private:
     double Saw2Wave(double elapsed, double frequency);
     double Noise();
 
-    double getSample(double, Note*);
+    double getSample(double, int);
 
     double HZtoAV(double);
 
@@ -42,6 +42,8 @@ private:
         SYNC,
     };
     void initialiseInputs();
+
+    array<int, POLYPHONY + 1> activeVoices{};
 };
 
 REGISTER_COMPONENT(Oscillator);

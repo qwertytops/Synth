@@ -7,8 +7,8 @@ class Connection {
 public:
     bool visited = false;
     SynthComponent* source;
-    NoteInput* destination;
+    Input* destination;
 
-    Connection(SynthComponent* source, NoteInput* destination)
+    Connection(SynthComponent* source, Input* destination)
         : source(source), destination(destination) {}
 };

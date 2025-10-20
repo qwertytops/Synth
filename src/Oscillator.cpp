@@ -1,22 +1,32 @@
 #include "Oscillator.hpp"
-#include "NoteInput.hpp"
+#include "Input.hpp"
 #include "Connection.hpp"
 
 void Oscillator::run(double elapsed) {
-    NoteInput *mainInput = inputs.at(Inputs::MAIN);
-    for (int i = 0; i < mainInput->endIndex; i++) {
-        auto& pair = mainInput->pairs.at(i);
-        Note* note = pair.first;
-        double sample = getSample(elapsed, note);;
 
-        for (auto& conn : outgoingConnections) {
-            conn->destination->add(make_pair(note, sample));
+    while (consumeMidiEvent()) {
+        if (currentMidiEvent.type == Event::NOTE_ON) {
+            activeVoices[currentMidiEvent.voice] = currentMidiEvent.midi;
+        } else if (currentMidiEvent.type == Event::NOTE_OFF) {
+            activeVoices[currentMidiEvent.voice] = -1;
         }
+    }
+
+    for (int i = 0; i < activeVoices.size(); i++) {
+        int midi = activeVoices[i];
+        
+        if (midi < 0) continue;
+
+        double sample = getSample(elapsed, midi);
+        
+        for (auto& conn : outgoingConnections) {
+            conn->destination->add(make_pair(i, sample));
+        } 
     }
 }
 
-double Oscillator::getSample(double elapsed, Note* note) {
-    double frequency = 440.0 * pow(2.0, ((note->midiNum + 12 * octave) - 69) / 12.0);
+double Oscillator::getSample(double elapsed, int midi) {
+    double frequency = 440.0 * pow(2.0, ((midi + 12 * octave) - 69) / 12.0);
     double detuneRatio = pow(2.0, detune / 1200.0);
     frequency = frequency * detuneRatio;
 
@@ -106,9 +116,9 @@ double Oscillator::HZtoAV(double hz) {
 }
 
 void Oscillator::initialiseInputs() {
-    inputs.push_back(new NoteInput("Main", this));
-    inputs.push_back(new NoteInput("Frequency", this));
-    inputs.push_back(new NoteInput("Amplitude", this));
-    inputs.push_back(new NoteInput("Pulse Width", this));
-    inputs.push_back(new NoteInput("Sync", this));
+    inputs.push_back(new Input("Main", this));
+    inputs.push_back(new Input("Frequency", this));
+    inputs.push_back(new Input("Amplitude", this));
+    inputs.push_back(new Input("Pulse Width", this));
+    inputs.push_back(new Input("Sync", this));
 }

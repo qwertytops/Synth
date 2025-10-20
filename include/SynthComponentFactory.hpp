@@ -20,7 +20,7 @@ private:
 #define REGISTER_COMPONENT(CLASS_NAME) \
     static bool _registered_##CLASS_NAME = [](){ \
         SynthComponentFactory::instance().registerClass(#CLASS_NAME, []() { \
-            return new CLASS_NAME(); \
+            return static_cast<SynthComponent*>(new CLASS_NAME()); \
         }); \
         return true; \
     }()

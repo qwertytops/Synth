@@ -1,73 +1,15 @@
 #include "Synth.hpp"
-#include "NoteInput.hpp"
+#include "Input.hpp"
 #include "Connection.hpp"
 
 #include <iostream>
 #include <unordered_set>
 #include <cmath>
-#include <algorithm> // for clamp
-#include <cassert>
-
-// UNSUSED BUT KEEPING FOR A BIT JUST IN CASE
-double Synth::MakeSound(double elapsed) {
-    mtx.lock();
-
-    for (auto& input : allInputs) {
-        input->reset();
-    }
-
-    for (auto& note : notesBeingPlayed) {
-        for (int i = 0; i < inputs; i++) {
-            // cout << processingOrder[i]->name << endl;
-            processingOrder[i]->inputs.at(0)->add(make_pair(note, 0));
-        }
-        // cout << endl;
-    }
-    for (auto& component : processingOrder) {
-        // cout << "running " << component->name << endl;
-        component->run(elapsed);
-    }
-
-    double result = 0.0;
-
-    // Rebuild notesBeingPlayed by inspecting mainOut->pairs.
-    // Keep notes that are still active or have non-negligible amplitude,
-    // and deduplicate so the same Note* isn't added multiple times.
-    const double AMPLITUDE_THRESH = 0.0001;
-    std::unordered_set<Note*> seen;
-    vector<Note*> keptNotes;
-    for (auto& pair : mainOut->pairs) {
-        Note* n = pair.first;
-        double amplitude = pair.second;
-        
-        if (n == nullptr) continue;
-        if (!n->finished) {
-            if (seen.find(n) == seen.end()) {
-                seen.insert(n);
-                keptNotes.push_back(n);
-            }
-        }
-        result += amplitude;
-    }
-    notesBeingPlayed = std::move(keptNotes);
-
-    // if (result != 0) {
-    //     cout << result << endl;
-    // }
-    mtx.unlock();
-    // cout << result << endl;
-    return result * volume;
-}
 
 Synth::Synth(int octave)
-    : player([this](float* buffer, UInt32 frames) { this->RenderAudioBlock(buffer, frames); })
+    : eventBuffer(EVENT_CAP), player([this](float* buffer, UInt32 frames) { this->RenderAudioBlock(buffer, frames); })
 {
-    // initialize lock-free ring buffer
-    assert((EVENT_CAP & (EVENT_CAP - 1)) == 0); // must be power of two
-    eventBuffer.resize(EVENT_CAP);
-    evMask = EVENT_CAP - 1;
-
-    mainOut = new NoteInput("Main Out");
+    mainOut = new Input("Main Out");
     establishProcessingOrder();
     player.Start();
     thread input([this, octave]() { this->ProcessInput(octave); });
@@ -82,7 +24,7 @@ void Synth::addComponent(SynthComponent* comp) {
 }
 
 void Synth::getAllInputs() {
-    vector<NoteInput*> result = {};
+    vector<Input*> result = {};
 
     result.push_back(mainOut);
 
@@ -93,30 +35,6 @@ void Synth::getAllInputs() {
     }
 
     allInputs = result;
-}
-
-bool Synth::pushEvent(const Event& e) {
-    size_t tail = evTail.load(std::memory_order_relaxed);
-    size_t next = (tail + 1) & evMask;
-    size_t head = evHead.load(std::memory_order_acquire);
-    if (next == head) {
-        // full — drop the event to remain non-blocking
-        return false;
-    }
-    eventBuffer[tail] = e;
-    evTail.store(next, std::memory_order_release);
-    return true;
-}
-
-bool Synth::popEvent(Event& out) {
-    size_t head = evHead.load(std::memory_order_relaxed);
-    size_t tail = evTail.load(std::memory_order_acquire);
-    if (head == tail) {
-        return false; // empty
-    }
-    out = eventBuffer[head];
-    evHead.store((head + 1) & evMask, std::memory_order_release);
-    return true;
 }
 
 void Synth::ProcessInput(int octave) {
@@ -132,14 +50,18 @@ void Synth::ProcessInput(int octave) {
                 e.type = Event::NOTE_ON;
                 e.midi = static_cast<uint8_t>(k + 8*octave);
                 e.time = player.GetTime();
-                pushEvent(e);
+                if (!eventBuffer.push(e)) {
+                    std::this_thread::yield();
+                }
             } else if (!current && prevKeysLocal[k]) {
                 // key released: push NOTE_OFF event
                 Event e;
                 e.type = Event::NOTE_OFF;
                 e.midi = static_cast<uint8_t>(k + 8*octave);
                 e.time = player.GetTime();
-                pushEvent(e);
+                if (!eventBuffer.push(e)) {
+                    std::this_thread::yield();
+                }
             }
 
             prevKeysLocal[k] = current;
@@ -149,7 +71,6 @@ void Synth::ProcessInput(int octave) {
 }
 
 void Synth::establishProcessingOrder() {
-    // cout << endl << "EPA" << endl;
     vector<SynthComponent *> allNodes = components;
     vector<SynthComponent*> noInputNodes = {};
     vector<SynthComponent*> order = {};
@@ -163,15 +84,14 @@ void Synth::establishProcessingOrder() {
         }
         if (node->incomingConnections.size() == 0) {
             allNodes.erase(allNodes.begin() + i);
-            // cout << "NIN: " << node->name << node->id << endl;
             noInputNodes.push_back(node);
             inputs++;
         }
     }
-    // cout << "inputs: " << inputs << endl;
 
     while (noInputNodes.size() > 0) {
-        SynthComponent* current = noInputNodes.at(0);
+        cout << "here4" << endl;
+        SynthComponent *current = noInputNodes.at(0);
         order.push_back(current);
         noInputNodes.erase(noInputNodes.begin());
 
@@ -182,7 +102,6 @@ void Synth::establishProcessingOrder() {
             if (conn->destination->parent == nullptr) {
                 continue;
             }
-
 
             for (auto& conn1 : conn->destination->parent->incomingConnections) {
                 if (!conn1->visited) {
@@ -210,44 +129,31 @@ void Synth::establishProcessingOrder() {
     // }
 }
 
+void Synth::broadcastMidiEvent(Event e) {
+    for (auto& comp : components) {
+        comp->sendMidiEvent(e);
+    }
+}
+
 void Synth::RenderAudioBlock(float* outBuffer, UInt32 frames) {
     // Pop and apply all pending events once per block (audio-thread, non-blocking)
     Event ev;
-    while (popEvent(ev)) {
-        if (ev.type == Event::NOTE_ON) {
-            Note* n = new Note(static_cast<int>(ev.midi), ev.time);
-            notesBeingPlayed.push_back(n);
-        } else if (ev.type == Event::NOTE_OFF) {
-            // mark matching active note off
-            for (auto& note : notesBeingPlayed) {
-                if (note->midiNum == ev.midi && note->active) {
-                    note->noteOff = ev.time;
-                    note->active = false;
-                    break;
-                }
-            }
-        }
+    while (eventBuffer.pop(ev)) {
+        broadcastMidiEvent(ev);
     }
 
-    // Process block without taking mtx (audio thread must not block)
+    // Process block
     for (UInt32 i = 0; i < frames; ++i) {
         double t = player.GetTime() + (double)i / 44100.0;
-        double s = MakeSoundLocked(t);
+        double s = MakeSound(t);
         outBuffer[i] = static_cast<float>(std::clamp(s, -1.0, 1.0));
     }
 }
 
-double Synth::MakeSoundLocked(double elapsed) {
-    // Reset all inputs (reuse existing NoteInput objects)
+double Synth::MakeSound(double elapsed) {
+    // Reset all inputs
     for (auto& input : allInputs) {
         input->reset();
-    }
-
-    // Push active notes into input nodes (use processingOrder[0..inputs-1])
-    for (auto* note : notesBeingPlayed) {
-        for (int i = 0; i < inputs && i < (int)processingOrder.size(); ++i) {
-            processingOrder[i]->inputs.at(0)->add(std::make_pair(note, 0.0));
-        }
     }
 
     // Run components in processing order
@@ -255,24 +161,12 @@ double Synth::MakeSoundLocked(double elapsed) {
         component->run(elapsed);
     }
 
-    // Accumulate result and rebuild notesBeingPlayed (deduplicate)
+    // Accumulate result
     double result = 0.0;
-    const double AMPLITUDE_THRESH = 0.0001;
-    std::unordered_set<Note*> seen;
-    vector<Note*> keptNotes;
-    keptNotes.reserve(notesBeingPlayed.size());
 
     for (auto& pair : mainOut->pairs) {
-        Note* n = pair.first;
         double amplitude = pair.second;
-        if (n == nullptr) continue;
-        if (!n->finished || std::fabs(amplitude) > AMPLITUDE_THRESH) {
-            if (seen.insert(n).second) {
-                keptNotes.push_back(n);
-            }
-        }
         result += amplitude;
     }
-    notesBeingPlayed = std::move(keptNotes);
     return result * volume;
 }

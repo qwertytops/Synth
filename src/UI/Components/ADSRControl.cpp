@@ -1,5 +1,5 @@
 #include "UI/Components/ADSRControl.hpp"
-#include "NoteInput.hpp"
+#include "Input.hpp"
 #include "Connection.hpp"
 
 ADSRControl::ADSRControl(ADSR* adsr, QSize bounds)

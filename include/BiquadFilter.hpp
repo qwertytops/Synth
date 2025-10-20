@@ -14,14 +14,14 @@ class BiquadFilter : public SynthComponent {
 public:
     BiquadFilter();
     BiquadFilter(FilterMode mode, double frequency, double Q, double gainDB = 0.0)
-        : mode(mode), sampleRate(44100), frequency(frequency), Q(Q), gainDB(gainDB)
+        : mode(mode), frequency(frequency), Q(Q), gainDB(gainDB)
     {
         calculateCoefficients();
         // this is out of date but also out of use rn
     }
 
     void run(double elapsed);
-    double applyFilter(double);
+    double applyFilter(double, int);
 
     void setFrequency(double frequency);
     void setQ(double Q);
@@ -38,7 +38,6 @@ private:
     bool bypass;
     
     FilterMode mode;
-    double sampleRate;
     double frequency;
     double Q;
     double gainDB;
@@ -48,8 +47,7 @@ private:
     double b0 = 0, b1 = 0, b2 = 0;
 
     // State variables (delay elements)
-    double x1 = 0, x2 = 0;
-    double y1 = 0, y2 = 0;
+    array<double, POLYPHONY + 1> x1{}, x2{}, y1{}, y2{};
 
     void calculateCoefficients();
 
@@ -60,6 +58,8 @@ private:
         GAIN,
     };
     void initialiseInputs();
+
+    array<int, POLYPHONY + 1> activeVoices{};
 };
 
 REGISTER_COMPONENT(BiquadFilter);
