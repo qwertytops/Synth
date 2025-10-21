@@ -71,6 +71,9 @@ void Synth::ProcessInput(int octave) {
 }
 
 void Synth::establishProcessingOrder() {
+    cout << "epa" << endl;
+    // pauseAudio = true;
+    player.Pause();
     vector<SynthComponent *> allNodes = components;
     vector<SynthComponent*> noInputNodes = {};
     vector<SynthComponent*> order = {};
@@ -90,7 +93,7 @@ void Synth::establishProcessingOrder() {
     }
 
     while (noInputNodes.size() > 0) {
-        cout << "here4" << endl;
+        // cout << "here4" << endl;
         SynthComponent *current = noInputNodes.at(0);
         order.push_back(current);
         noInputNodes.erase(noInputNodes.begin());
@@ -122,11 +125,13 @@ void Synth::establishProcessingOrder() {
 
     processingOrder = std::move(order);
 
-    // cout << "\norder:\n";
+    cout << "\norder:\n";
     
-    // for (auto& c : processingOrder) {
-    //     cout << c->name << c->id << endl;
-    // }
+    for (auto& c : processingOrder) {
+        cout << c->name << c->id << endl;
+    }
+    pauseAudio = false;
+    player.Unpause();
 }
 
 void Synth::broadcastMidiEvent(Event e) {
@@ -151,6 +156,9 @@ void Synth::RenderAudioBlock(float* outBuffer, UInt32 frames) {
 }
 
 double Synth::MakeSound(double elapsed) {
+    if (pauseAudio) {
+        return 0.0;
+    }
     // Reset all inputs
     for (auto& input : allInputs) {
         input->reset();
@@ -158,14 +166,14 @@ double Synth::MakeSound(double elapsed) {
 
     // Run components in processing order
     for (auto& component : processingOrder) {
+        // cout << "running " << component->id << endl;
         component->run(elapsed);
     }
 
     // Accumulate result
     double result = 0.0;
 
-    for (auto& pair : mainOut->pairs) {
-        double amplitude = pair.second;
+    for (auto& amplitude : mainOut->values) {
         result += amplitude;
     }
     return result * volume;

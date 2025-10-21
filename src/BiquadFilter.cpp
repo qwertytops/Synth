@@ -17,14 +17,13 @@ BiquadFilter::BiquadFilter() {
 
 void BiquadFilter::run(double elapsed) {
     Input* mainInput = inputs.at(Inputs::MAIN);
-    for (int i = 0; i < mainInput->endIndex; i++) {
-        auto &pair = mainInput->pairs.at(i);
-        int voice = pair.first;
-        double value = pair.second;
+    for (int i = 0; i < POLYPHONY + 1; i++) {
+        int voice = i;
+        double value = mainInput->values.at(i);
 
         value = applyFilter(value, voice);
         for (auto& conn : outgoingConnections) {
-            conn->destination->add(make_pair(voice, value));
+            conn->destination->add(voice, value);
         }
     }
 }

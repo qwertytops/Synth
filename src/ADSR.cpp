@@ -22,6 +22,7 @@ ADSR::ADSR(double a, double d, double s, double r) {
 
 void ADSR::run(double elapsed) {
 
+    // cout << "running adsr" << endl;
     while (consumeMidiEvent()) {
         if (currentMidiEvent.type == Event::NOTE_ON) {
             activeVoices[currentMidiEvent.voice] = NoteInfo{currentMidiEvent.time, 0, 0};
@@ -30,16 +31,17 @@ void ADSR::run(double elapsed) {
         }
     }
     Input *mainInput = inputs.at(Inputs::MAIN);
-    for (int i = 0; i < mainInput->endIndex; i++) {
-        cout << "here2" << endl;
-        cout << mainInput->pairs.size() << " | " << i << endl;
-        auto &pair = mainInput->pairs.at(i);
-        int voice = pair.first;
-        double value = pair.second;
+    for (int i = 0; i < POLYPHONY + 1; i++) {
+        int voice = i;
+        double value = mainInput->values.at(i);
 
         NoteInfo* voiceLoc = &activeVoices[voice];
+        // cout << "voice " << voice << " on: " << voiceLoc->noteOn << endl;
 
-        double sample = getAmplitude(elapsed, *voiceLoc);
+        // cout << value << endl;
+        // cout << getAmplitudeMultiplier(elapsed, *voiceLoc) << endl;
+
+        double sample = value * getAmplitudeMultiplier(elapsed, *voiceLoc);
 
         // update release level
         if (voiceLoc->noteOff < voiceLoc->noteOn) {
@@ -47,16 +49,24 @@ void ADSR::run(double elapsed) {
         }
 
         for (auto& conn : outgoingConnections) {
-            conn->destination->add(make_pair(voice, sample));
+            // cout << "adding " << sample << " to voice " << voice << endl;
+            conn->destination->add(voice, sample);
         }
     }
 }
 
-double ADSR::getAmplitude(double elapsed, NoteInfo note) {
+double ADSR::getAmplitudeMultiplier(double elapsed, NoteInfo note) {
+
+    if (note.noteOn == 0) {
+        return 0;
+    }
+
     double amplitude = 0;
     double lifetime = elapsed - note.noteOn;
 
-    if (note.noteOff > 0) {
+
+    if (note.noteOff == 0) {
+        // cout << "ADS" << endl;
         if (lifetime < attack) { // A
             amplitude = (lifetime / attack) * 1;
         } else if (lifetime < (attack + decay)) { // D
@@ -68,9 +78,11 @@ double ADSR::getAmplitude(double elapsed, NoteInfo note) {
         note.releaseLevel = amplitude; // bit of a hack
     }
     else {
+        // cout << "R" << endl;
         // R
         double timeSinceRelease = elapsed - note.noteOff;
         if (timeSinceRelease >= release) {
+            note.noteOn = 0;
             return 0;
         }
         if (release > 0) { // div by 0 guard may not be necessary after above block
@@ -80,6 +92,7 @@ double ADSR::getAmplitude(double elapsed, NoteInfo note) {
         }
     }
 
+    // cout << "returning " << amplitude << endl;
     return amplitude;
 }
 

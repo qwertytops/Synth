@@ -54,6 +54,7 @@ public:
 
 private:
     CoreAudioWaveMaker<float> player;
+    bool pauseAudio = false;
 
     int inputs = 0;
     vector<SynthComponent*> processingOrder;

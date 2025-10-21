@@ -45,7 +45,7 @@ public:
                              &streamDesc,
                              sizeof(streamDesc));
 
-        // Set render callback (unchanged)
+        // Set render callback
         AURenderCallbackStruct callback = {};
         callback.inputProc = &RenderStatic;
         callback.inputProcRefCon = this;
@@ -60,6 +60,24 @@ public:
         AudioUnitInitialize(m_audioUnit);
         AudioOutputUnitStart(m_audioUnit);
         return true;
+    }
+
+    void Unpause() {
+        if (m_audioUnit) {
+            OSStatus status = AudioOutputUnitStart(m_audioUnit);
+            if (status != noErr) {
+                std::cerr << "AudioOutputUnitStart failed: " << status << std::endl;
+            }
+        }
+    }
+
+    void Pause() {
+        if (m_audioUnit) {
+            OSStatus status = AudioOutputUnitStop(m_audioUnit);
+            if (status != noErr) {
+                std::cerr << "AudioOutputUnitStop failed: " << status << std::endl;
+            }
+        }
     }
 
     void Stop() {

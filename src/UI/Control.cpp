@@ -37,7 +37,6 @@ QMenu* Control::existingConnectionsMenu(SynthComponent* component) {
     QMenu* menu = new QMenu(this);
 
     for (int i = 0; i < component->outgoingConnections.size(); i++) {
-        cout << "herex" << endl;
         Connection *conn = component->outgoingConnections.at(i);
         QAction* action = menu->addAction(QString::fromStdString(conn->destination->name));
         action->setData(i);

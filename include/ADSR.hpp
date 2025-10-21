@@ -27,7 +27,7 @@ public:
     void run(double elapsed);
 
 private:
-    double getAmplitude(double elapsed, NoteInfo note);
+    double getAmplitudeMultiplier(double elapsed, NoteInfo note);
     enum Inputs {
         MAIN
     };

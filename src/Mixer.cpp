@@ -13,13 +13,12 @@ Mixer::Mixer() {
 void Mixer::run(double elapsed) {
     for (int i = 0; i < NUM_INPUTS; i++) {
         Input* currentInput = inputs.at(i);
-        for (int i = 0; i < currentInput->endIndex; i++) {
-            auto& pair = currentInput->pairs.at(i);
-            int voice = pair.first;
-            double sample = pair.second * inLevels[i];
+        for (int i = 0; i < POLYPHONY + 1; i++) {
+            int voice = i;
+            double sample = currentInput->values.at(i) * inLevels[i];
 
             for (auto& conn : outgoingConnections) {
-                conn->destination->add(make_pair(voice, sample));
+                conn->destination->add(voice, sample);
             }
         }
     }

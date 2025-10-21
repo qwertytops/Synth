@@ -11,23 +11,23 @@ using namespace std;
 
 class Input {
 public:
-    array<pair<int, double>, POLYPHONY> pairs = {}; // voice, value
+    array<double, POLYPHONY + 1> values = {}; // voice, value
 
     string name;
     SynthComponent* parent;
-    int endIndex;
 
-    void add(pair<int, double> pair) {
-        cout << "here1" << endl;
-        pairs.at(endIndex % POLYPHONY) = pair;
-        endIndex++;
+    void add(int voice, double value) {
+        values.at(voice) += value;
     }
     void reset() {
-        endIndex = 0;
+        // this might not be necessary at all
+        for (int i = 0; i < POLYPHONY + 1; i++) {
+            values.at(i) = 0.0;
+        }
     }
 
     Input(string name, SynthComponent* parent = nullptr)
-        : name(name), parent(parent), endIndex(0) {}
+        : name(name), parent(parent) {}
 
 private:
 };

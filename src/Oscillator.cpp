@@ -20,7 +20,8 @@ void Oscillator::run(double elapsed) {
         double sample = getSample(elapsed, midi);
         
         for (auto& conn : outgoingConnections) {
-            conn->destination->add(make_pair(i, sample));
+            // cout << "adding " << sample << " to voice " << i << endl;
+            conn->destination->add(i, sample);
         } 
     }
 }
