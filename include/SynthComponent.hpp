@@ -3,11 +3,14 @@
 #include <vector>
 #include <utility>
 #include <string>
+#include <boost/lockfree/spsc_queue.hpp>
 
 #include "Event.hpp"
 #include "Globals.hpp"
 
 using namespace std;
+using namespace boost::lockfree;
+
 class Input;
 class Connection;
 class Synth;
@@ -29,9 +32,7 @@ public:
 protected:
     vector<Input*> destinations = {};
 
-    std::array<Event, EVENT_CAP> events = {};
-    int nextFreeEventIndex = 0;
-    int nextEventToConsume = 0;
+    boost::lockfree::spsc_queue<Event, boost::lockfree::capacity<EVENT_CAP>> events = {};
     Event currentMidiEvent;
 
     bool consumeMidiEvent();

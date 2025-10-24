@@ -6,9 +6,9 @@ void Oscillator::run(double elapsed) {
 
     while (consumeMidiEvent()) {
         if (currentMidiEvent.type == Event::NOTE_ON) {
-            activeVoices[currentMidiEvent.voice] = currentMidiEvent.midi;
+            activeVoices[currentMidiEvent.voice] = currentMidiEvent.midiNum;
         } else if (currentMidiEvent.type == Event::NOTE_OFF) {
-            activeVoices[currentMidiEvent.voice] = -1;
+            // activeVoices[currentMidiEvent.voice] = -1;
         }
     }
 
@@ -20,7 +20,6 @@ void Oscillator::run(double elapsed) {
         double sample = getSample(elapsed, midi);
         
         for (auto& conn : outgoingConnections) {
-            // cout << "adding " << sample << " to voice " << i << endl;
             conn->destination->add(i, sample);
         } 
     }

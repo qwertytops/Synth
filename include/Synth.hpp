@@ -18,6 +18,7 @@
 #include "Note.hpp"
 #include "Input.hpp"
 #include "SynthComponent.hpp"
+#include "VoiceAllocator.hpp"
 
 using namespace std;
 using namespace boost::lockfree;
@@ -54,7 +55,7 @@ public:
 
 private:
     CoreAudioWaveMaker<float> player;
-    bool pauseAudio = false;
+    VoiceAllocator voiceAllocator;
 
     int inputs = 0;
     vector<SynthComponent*> processingOrder;

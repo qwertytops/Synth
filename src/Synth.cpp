@@ -5,6 +5,7 @@
 #include <iostream>
 #include <unordered_set>
 #include <cmath>
+#include <iomanip>
 
 Synth::Synth(int octave)
     : eventBuffer(EVENT_CAP), player([this](float* buffer, UInt32 frames) { this->RenderAudioBlock(buffer, frames); })
@@ -45,22 +46,27 @@ void Synth::ProcessInput(int octave) {
             bool current = Synth::keys[k].load(std::memory_order_relaxed); // read atomic
 
             if (current && !prevKeysLocal[k]) {
-                // key pressed: push NOTE_ON event (no mutex, no allocation)
+                // key pressed: push NOTE_ON event
                 Event e;
                 e.type = Event::NOTE_ON;
-                e.midi = static_cast<uint8_t>(k + 8*octave);
+                e.midiNum = static_cast<uint8_t>(k + 8*octave);
                 e.time = player.GetTime();
+                e.voice = voiceAllocator.allocate(e.midiNum, e.time);
                 if (!eventBuffer.push(e)) {
                     std::this_thread::yield();
                 }
             } else if (!current && prevKeysLocal[k]) {
                 // key released: push NOTE_OFF event
-                Event e;
+                Event e{};
                 e.type = Event::NOTE_OFF;
-                e.midi = static_cast<uint8_t>(k + 8*octave);
+                e.midiNum = static_cast<uint8_t>(k + 8*octave);
                 e.time = player.GetTime();
-                if (!eventBuffer.push(e)) {
-                    std::this_thread::yield();
+                int voice = voiceAllocator.release(e.midiNum);
+                if (voice != -1) {
+                    e.voice = voice;
+                    if (!eventBuffer.push(e)) {
+                        std::this_thread::yield();
+                    }
                 }
             }
 
@@ -71,7 +77,7 @@ void Synth::ProcessInput(int octave) {
 }
 
 void Synth::establishProcessingOrder() {
-    cout << "epa" << endl;
+    // cout << "epa" << endl;
     // pauseAudio = true;
     player.Pause();
     vector<SynthComponent *> allNodes = components;
@@ -93,7 +99,6 @@ void Synth::establishProcessingOrder() {
     }
 
     while (noInputNodes.size() > 0) {
-        // cout << "here4" << endl;
         SynthComponent *current = noInputNodes.at(0);
         order.push_back(current);
         noInputNodes.erase(noInputNodes.begin());
@@ -125,16 +130,16 @@ void Synth::establishProcessingOrder() {
 
     processingOrder = std::move(order);
 
-    cout << "\norder:\n";
+    // cout << "\norder:\n";
     
-    for (auto& c : processingOrder) {
-        cout << c->name << c->id << endl;
-    }
-    pauseAudio = false;
+    // for (auto& c : processingOrder) {
+    //     cout << c->name << c->id << endl;
+    // }
     player.Unpause();
 }
 
 void Synth::broadcastMidiEvent(Event e) {
+    uint8_t* evPtr = reinterpret_cast<uint8_t*>(&e);
     for (auto& comp : components) {
         comp->sendMidiEvent(e);
     }
@@ -156,9 +161,6 @@ void Synth::RenderAudioBlock(float* outBuffer, UInt32 frames) {
 }
 
 double Synth::MakeSound(double elapsed) {
-    if (pauseAudio) {
-        return 0.0;
-    }
     // Reset all inputs
     for (auto& input : allInputs) {
         input->reset();
