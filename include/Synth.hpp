@@ -33,8 +33,6 @@ public:
     // atomic key state updated by input thread
     std::array<std::atomic_bool, 18> keys;
 
-    std::mutex mtx;
-
     void ProcessInput(int octave);
 
     // New: block render API used by audio device

@@ -4,21 +4,18 @@ project(Synth LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_subdirectory(external/elements)
-
 set(CMAKE_BUILD_TYPE Debug)
 
 # Add include directories
 include_directories(include)
 
-
 # Collect all source files
 file(GLOB_RECURSE SOURCES src/*.cpp)
 
-set(CMAKE_PREFIX_PATH "/opt/homebrew/opt/qt/lib/cmake") # REMOVE THIS
+set(CMAKE_PREFIX_PATH "/opt/homebrew/opt/qt/lib/cmake")
 
 # Find required modules
-find_package(Qt6 REQUIRED COMPONENTS Widgets) # REMOVE THIS
+find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
 find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
@@ -52,8 +49,7 @@ find_library(AUDIOTOOLBOX_FRAMEWORK AudioToolbox)
 target_link_libraries(synth
     ${APPLICATIONSERVICES_FRAMEWORK}
     ${AUDIOTOOLBOX_FRAMEWORK}
-    Qt6::Widgets # REMOVE THIS
-    cycfi::elements
+    Qt6::Widgets
 )
 
 add_custom_target( run

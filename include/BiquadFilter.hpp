@@ -10,6 +10,16 @@
 
 using namespace std;
 
+struct BiquadParams {
+    double frequency;
+    double Q;
+    double gainDB;
+    FilterMode mode;
+    bool bypass;
+    // precomputed coefficients
+    double b0, b1, b2, a1, a2;
+};
+
 class BiquadFilter : public SynthComponent {
 public:
     BiquadFilter();

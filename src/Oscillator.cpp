@@ -7,8 +7,7 @@ void Oscillator::run(double elapsed) {
     while (consumeMidiEvent()) {
         if (currentMidiEvent.type == Event::NOTE_ON) {
             activeVoices[currentMidiEvent.voice] = currentMidiEvent.midiNum;
-        } else if (currentMidiEvent.type == Event::NOTE_OFF) {
-            // activeVoices[currentMidiEvent.voice] = -1;
+            startTimes[currentMidiEvent.voice] = elapsed;
         }
     }
 
@@ -17,7 +16,7 @@ void Oscillator::run(double elapsed) {
         
         if (midi < 0) continue;
 
-        double sample = getSample(elapsed, midi);
+        double sample = getSample(elapsed, midi, startTimes[i]);
         
         for (auto& conn : outgoingConnections) {
             conn->destination->add(i, sample);
@@ -25,94 +24,79 @@ void Oscillator::run(double elapsed) {
     }
 }
 
-double Oscillator::getSample(double elapsed, int midi) {
+double Oscillator::getSample(double elapsed, int midi, double startTime) {
     double frequency = 440.0 * pow(2.0, ((midi + 12 * octave) - 69) / 12.0);
     double detuneRatio = pow(2.0, detune / 1200.0);
     frequency = frequency * detuneRatio;
 
+    double phase;
+
+    if (retrigger) {
+        phase = (elapsed - startTime) * frequency + startPhase;
+    } else {
+        phase = startTime * frequency + startPhase;
+    }
+    phase -= floor(phase);
+
     double sample = 0.0;
     switch (waveType) {
     case WaveType::SINE:
-        sample = SineWave(elapsed, frequency);
+        sample = SineWave(phase);
         break;
     case WaveType::SQUARE:
-        sample = SquareWave(elapsed, frequency);
+        sample = SquareWave(phase);
         break;
     case WaveType::TRI:
-        sample = TriangleWave(elapsed, frequency);
+        sample = TriangleWave(phase);
         break;
     case WaveType::SAW:
-        sample = SawWave(elapsed, frequency);
-        break;
-    case WaveType::SAW2:
-        sample = Saw2Wave(elapsed, frequency);
+        sample = SawWave(phase);
         break;
     case WaveType::NOISE:
-        sample = frequency ? Noise() : 0;
+        sample = Noise();
         break;
     default:
         sample = 0;
         break;
     }
+    // cout << sample << endl;
     return sample * level;
 }
 
 Oscillator::Oscillator() {
-    waveType = WaveType::SINE;
-    this->octave = 4;
+    waveType = WaveType::SAW;
+    retrigger = true;
+    startPhase = 0.5;
+    this->octave = 5;
     this->detune = 0;
     initialiseInputs();
     name = "Oscillator";
 }
 
-Oscillator::Oscillator(WaveType w, int octave) {
-    waveType = w;
-    this->octave = octave;
-    this->detune = 0;
-    initialiseInputs();
-    name = "Oscillator";
-}
-Oscillator::Oscillator(WaveType w, int octave, int detune) {
-    waveType = w;
-    this->octave = octave;
-    this->detune = detune;
-    initialiseInputs();
-    name = "Oscillator";
+double Oscillator::SineWave(double phase) {
+    return sin(HZtoAV(phase));
 }
 
-double Oscillator::SineWave(double elapsed, double frequency) {
-    return sin(HZtoAV(frequency) * elapsed);
+double Oscillator::TriangleWave(double phase) {
+    double sine = SineWave(phase);
+    return asin(sine) * M_2_PI;
 }
 
-double Oscillator::TriangleWave(double elapsed, double frequency) {
-    double sine = SineWave(elapsed, frequency);
-    return HZtoAV(asin(sine));
+double Oscillator::SquareWave(double phase) {
+    return phase < 0.5 ? 1.0 : -1.0;
 }
 
-double Oscillator::SquareWave(double elapsed, double frequency) {
-    double sine = SineWave(elapsed, frequency);
-    return sine > 0 ? 1.0 : -1.0;
-}
-
-double Oscillator::SawWave(double elapsed, double frequency) {
-    return 2.0 * fmod(elapsed * frequency, 1.0) - 1.0;
-}
-
-double Oscillator::Saw2Wave(double elapsed, double frequency) {
-    double dOutput = 0.0;
-
-    for (double n = 1.0; n < 40.0; n++)
-        dOutput += (sin(n * HZtoAV(frequency) * elapsed)) / n;
-
-    return dOutput * (2.0 / M_PI);
+// sawtooth down
+double Oscillator::SawWave(double phase) {
+    return 2 * (1 - phase) - 1;
 }
 
 double Oscillator::Noise() {
-    return 2 * ((double)rand() / (double)RAND_MAX - 1);
+    return 2 * ((double)rand() / (double)RAND_MAX - 1) - 1;
 }
 
 double Oscillator::HZtoAV(double hz) {
-    return hz * 2 * M_PI;
+    return hz * 6.2831853072;
 }
 
 void Oscillator::initialiseInputs() {
