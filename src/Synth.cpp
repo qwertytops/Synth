@@ -19,9 +19,26 @@ Synth::Synth(int octave)
 
 
 void Synth::addComponent(SynthComponent* comp) {
+    player.Pause();
+
     components.push_back(comp);
     establishProcessingOrder();
     getAllInputs();
+
+    player.Unpause();
+}
+
+void Synth::removeComponent(SynthComponent* comp) {
+    player.Pause();
+
+    // erase component
+    components.erase(std::remove(components.begin(), components.end(), comp), components.end());
+    delete comp;
+
+    establishProcessingOrder();
+    getAllInputs();
+
+    player.Unpause();
 }
 
 void Synth::getAllInputs() {
@@ -77,8 +94,11 @@ void Synth::ProcessInput(int octave) {
 }
 
 void Synth::establishProcessingOrder() {
-    // cout << "epa" << endl;
-    // pauseAudio = true;
+    // cout << "\nepa from:" << endl;
+    // for (auto& c : components) {
+    //     cout << c->name << c->id << endl;
+    // }
+
     player.Pause();
     vector<SynthComponent *> allNodes = components;
     vector<SynthComponent*> noInputNodes = {};
@@ -89,6 +109,7 @@ void Synth::establishProcessingOrder() {
     for (int i = allNodes.size() - 1; i >= 0; i--) {
         SynthComponent* node = allNodes[i];
         for (auto& conn : node->incomingConnections) {
+            // cout << "visiting conn " << conn << endl;
             conn->visited = false;
         }
         if (node->incomingConnections.size() == 0) {

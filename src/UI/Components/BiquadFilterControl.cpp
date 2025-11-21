@@ -113,3 +113,4 @@ BiquadFilterControl::BiquadFilterControl(BiquadFilter* filter, QSize bounds)
     layout->addLayout(controlsLayout);
     layout->addWidget(button);
 }
+

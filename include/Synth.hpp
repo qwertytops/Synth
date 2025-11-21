@@ -45,6 +45,7 @@ public:
     Synth(int octave);
 
     void addComponent(SynthComponent*);
+    void removeComponent(SynthComponent*);
 
     vector<Input*> allInputs;
     void getAllInputs();

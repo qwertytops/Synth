@@ -29,6 +29,8 @@ public:
     PolyphonyMode polyphonyMode;
     void sendMidiEvent(Event e);
 
+    virtual ~SynthComponent();
+
 protected:
     vector<Input*> destinations = {};
 

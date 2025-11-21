@@ -102,8 +102,7 @@ OscillatorControl::OscillatorControl(Oscillator* oscillator, QSize bounds)
 
     QPushButton* deleteConnectionButton = new QPushButton("Bin icon", this);
     connect(deleteConnectionButton, &QPushButton::clicked, this, [this]() {
-        QMenu* menu = existingConnectionsMenu(this->oscillator);
-        menu->exec(QCursor::pos());
+        deleteComponent();
     });
 
     connectionsLayout->addWidget(connectButton);

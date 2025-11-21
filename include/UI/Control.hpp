@@ -14,4 +14,7 @@ public:
 protected:
     QMenu* availableInputsMenu();
     QMenu* existingConnectionsMenu(SynthComponent* component);
+
+    void deleteComponent();
+    void replaceGridItem(Synth*);
 };

@@ -86,7 +86,7 @@ int main(int argc, char* argv[]) {
     QGridLayout* gridLayout = new QGridLayout;
 
     const int rows = 10;
-    const int cols = 3;
+    const int cols = 4;
 
     for (int r = 0; r < rows; ++r) {
         gridLayout->setRowStretch(r, 1);

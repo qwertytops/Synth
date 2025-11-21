@@ -1,5 +1,5 @@
 #include "UI/Control.hpp"
-
+#include "UI/EmptySlot.hpp"
 
 QMenu* Control::availableInputsMenu()
 {
@@ -54,4 +54,47 @@ QMenu* Control::existingConnectionsMenu(SynthComponent* component) {
     }
 
     return menu;
+}
+
+void Control::deleteComponent() {
+    Synth* synth = parentComponent->synth;
+    // remove module from synth
+    synth->removeComponent(parentComponent);
+
+    // replace ui with empty slot
+    replaceGridItem(synth);
+}
+
+void Control::replaceGridItem(Synth* synth) {
+    // Get the grid layout
+    auto* grid = qobject_cast<QGridLayout*>(this->parentWidget()->layout());
+    if (!grid)
+        return;
+
+    // Find the current position of `this` in the grid
+    int row = -1, col = -1, rowSpan = 1, colSpan = 1;
+    bool found = false;
+    for (int r = 0; r < grid->rowCount() && !found; ++r) {
+        for (int c = 0; c < grid->columnCount(); ++c) {
+            QLayoutItem* item = grid->itemAtPosition(r, c);
+            if (item && item->widget() == this) {
+                row = r;
+                col = c;
+                found = true;
+                break;
+            }
+        }
+    }
+
+    if (!found)
+        return;
+
+    // Remove and delete the old widget
+    QLayoutItem* item = grid->takeAt(grid->indexOf(this));
+    delete item;             // removes layout item
+    this->hide();
+    this->deleteLater();     // schedule deletion
+
+    // Place the new widget in the same grid cell
+    grid->addWidget(new EmptySlot(synth), row, col, rowSpan, colSpan);
 }
