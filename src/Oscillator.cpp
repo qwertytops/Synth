@@ -1,6 +1,8 @@
 #include "Oscillator.hpp"
 #include "Input.hpp"
 #include "Connection.hpp"
+#include <cmath>
+#include <cstdlib>
 
 void Oscillator::run(double elapsed) {
 
@@ -8,15 +10,19 @@ void Oscillator::run(double elapsed) {
         if (currentMidiEvent.type == Event::NOTE_ON) {
             activeVoices[currentMidiEvent.voice] = currentMidiEvent.midiNum;
             startTimes[currentMidiEvent.voice] = elapsed;
+
+            if (retrigger) {
+                phaseAcc[currentMidiEvent.voice] = startPhase - floor(startPhase);
+            }
         }
     }
 
-    for (int i = 0; i < activeVoices.size(); i++) {
+    for (int i = 0; i < POLYPHONY; i++) {
         int midi = activeVoices[i];
         
         if (midi < 0) continue;
 
-        double sample = getSample(elapsed, midi, startTimes[i]);
+        double sample = getSample(elapsed, midi, i);
         
         for (auto& conn : outgoingConnections) {
             conn->destination->add(i, sample);
@@ -24,19 +30,33 @@ void Oscillator::run(double elapsed) {
     }
 }
 
-double Oscillator::getSample(double elapsed, int midi, double startTime) {
-    double frequency = 440.0 * pow(2.0, ((midi + 12 * octave) - 69) / 12.0);
+double Oscillator::getSample(double elapsed, int midi, int voice) {
+    // arbitrary choice of 1.0 = 2 octaves up
+    double modulation = (
+        inputs.at(Inputs::FREQUENCY)->values.at(voice)
+        + inputs.at(Inputs::FREQUENCY)->values.at(MONO_VOICE)
+    );
+    // cout << modulation << endl;
+
+    double frequency = 440.0 * pow(2.0, ((midi + semitone + modulation + 12.0 * octave) - 69.0) / 12.0);
     double detuneRatio = pow(2.0, detune / 1200.0);
-    frequency = frequency * detuneRatio;
+    frequency *= detuneRatio;
 
     double phase;
 
-    if (retrigger) {
-        phase = (elapsed - startTime) * frequency + startPhase;
-    } else {
-        phase = startTime * frequency + startPhase;
-    }
-    phase -= floor(phase);
+    // if (retrigger) {
+    //     phase = (elapsed - startTimes.at(voice)) * frequency + startPhase;
+    // } else {
+    //     phase = startTimes.at(voice) * frequency + startPhase;
+    // }
+    // phase -= floor(phase);
+    
+    // advance phase accumulator by frequency / sampleRate
+    double phaseInc = frequency / SAMPLE_RATE;
+    phaseAcc[voice] += phaseInc;
+    phaseAcc[voice] -= floor(phaseAcc[voice]);
+
+    phase = phaseAcc[voice];
 
     double sample = 0.0;
     switch (waveType) {
@@ -44,7 +64,7 @@ double Oscillator::getSample(double elapsed, int midi, double startTime) {
         sample = SineWave(phase);
         break;
     case WaveType::SQUARE:
-        sample = SquareWave(phase);
+        sample = SquareWave(phase, voice);
         break;
     case WaveType::TRI:
         sample = TriangleWave(phase);
@@ -59,8 +79,11 @@ double Oscillator::getSample(double elapsed, int midi, double startTime) {
         sample = 0;
         break;
     }
-    // cout << sample << endl;
-    return sample * level;
+
+    return sample * (level
+        + inputs.at(Inputs::AMPLITUDE)->values.at(voice)
+        + inputs.at(Inputs::AMPLITUDE)->values.at(MONO_VOICE)
+    );
 }
 
 Oscillator::Oscillator() {
@@ -68,7 +91,6 @@ Oscillator::Oscillator() {
     retrigger = true;
     startPhase = 0.5;
     this->octave = 5;
-    this->detune = 0;
     initialiseInputs();
     name = "Oscillator";
 }
@@ -80,10 +102,20 @@ double Oscillator::SineWave(double phase) {
 double Oscillator::TriangleWave(double phase) {
     double sine = SineWave(phase);
     return asin(sine) * M_2_PI;
+
+    // if (phase < 0.5) {
+    //     return -1.0 + 4.0 * phase;
+    // } else {
+    //     return 3.0 - 4.0 * phase;
+    // }
 }
 
-double Oscillator::SquareWave(double phase) {
-    return phase < 0.5 ? 1.0 : -1.0;
+double Oscillator::SquareWave(double phase, int voice) {
+    double pw = pulseWidth
+        + inputs.at(Inputs::PULSE_WIDTH)->values.at(voice)
+        + inputs.at(Inputs::PULSE_WIDTH)->values.at(MONO_VOICE);
+
+    return phase < pw ? 1.0 : -1.0;
 }
 
 // sawtooth down
@@ -100,7 +132,6 @@ double Oscillator::HZtoAV(double hz) {
 }
 
 void Oscillator::initialiseInputs() {
-    inputs.push_back(new Input("Main", this));
     inputs.push_back(new Input("Frequency", this));
     inputs.push_back(new Input("Amplitude", this));
     inputs.push_back(new Input("Pulse Width", this));

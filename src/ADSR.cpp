@@ -23,8 +23,6 @@ ADSR::ADSR(double a, double d, double s, double r) {
 }
 
 void ADSR::run(double elapsed) {
-
-    // cout << "running adsr" << endl;
     while (consumeMidiEvent()) {
         if (currentMidiEvent.type == Event::NOTE_ON) {
             activeVoices[currentMidiEvent.voice] = NoteInfo{currentMidiEvent.time, 0, 0};
@@ -33,7 +31,7 @@ void ADSR::run(double elapsed) {
         }
     }
     Input *mainInput = inputs.at(Inputs::MAIN);
-    for (int i = 0; i < POLYPHONY + 1; i++) {
+    for (int i = 0; i < POLYPHONY; i++) {
         int voice = i;
         double value = mainInput->values.at(i);
 

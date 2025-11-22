@@ -17,7 +17,7 @@ BiquadFilter::BiquadFilter() {
 
 void BiquadFilter::run(double elapsed) {
     Input* mainInput = inputs.at(Inputs::MAIN);
-    for (int i = 0; i < POLYPHONY + 1; i++) {
+    for (int i = 0; i < POLYPHONY; i++) {
         int voice = i;
         double value = mainInput->values.at(i);
 

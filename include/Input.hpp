@@ -11,7 +11,7 @@ using namespace std;
 
 class Input {
 public:
-    array<double, POLYPHONY + 1> values = {}; // voice, value
+    array<double, POLYPHONY + 1> values = {};
 
     string name;
     SynthComponent* parent;

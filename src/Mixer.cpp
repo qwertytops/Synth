@@ -13,7 +13,7 @@ Mixer::Mixer() {
 void Mixer::run(double elapsed) {
     for (int i = 0; i < NUM_INPUTS; i++) {
         Input* currentInput = inputs.at(i);
-        for (int i = 0; i < POLYPHONY + 1; i++) {
+        for (int i = 0; i < POLYPHONY; i++) {
             int voice = i;
             double sample = currentInput->values.at(i) * inLevels[i];
 

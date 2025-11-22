@@ -34,8 +34,9 @@ public:
     double level = 0.5;
     WaveType waveType;
     int octave;
-    int semitone;
-    int detune;
+    int semitone = 0;
+    int detune = 0;
+    double pulseWidth = 0.5;
 
     bool retrigger;
     float startPhase;
@@ -47,16 +48,15 @@ public:
 private:
     double SineWave(double phase);
     double TriangleWave(double phase);
-    double SquareWave(double phase);
+    double SquareWave(double phase, int voice);
     double SawWave(double phase);
     double Noise();
 
-    double getSample(double, int, double);
+    double getSample(double, int, int);
 
     double HZtoAV(double);
 
     enum Inputs {
-        MAIN,
         FREQUENCY,
         AMPLITUDE,
         PULSE_WIDTH,
@@ -66,6 +66,8 @@ private:
 
     array<int, POLYPHONY + 1> activeVoices{};
     array<double, POLYPHONY + 1> startTimes{};
+    // per-voice phase accumulator in [0,1)
+    array<double, POLYPHONY + 1> phaseAcc{};
 };
 
 REGISTER_COMPONENT(Oscillator);
